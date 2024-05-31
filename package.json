@@ -8,6 +8,7 @@
     "deploy": "vercel"
   },
   "dependencies": {
+    "@types/react": "^18.3.3",
     "frog": "latest",
     "hono": "^4"
   },
