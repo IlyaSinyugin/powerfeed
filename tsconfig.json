@@ -18,5 +18,5 @@
 
     "types": ["frog/client"]
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.mtsx"]
+  "include": ["**/*.ts", "**/*.tsx", "**/*.mtsx", "api/**/*.ts", "api/**/*.tsx"],
 }
