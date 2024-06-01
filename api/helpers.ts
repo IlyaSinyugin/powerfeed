@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 
 // import it outside of api folder
 dotenv.config({ path: '../.env' });
+
 // fetch all powerusers from Neynar 
 async function fetchPowerUsers() {
     const NEYNAR_API_KEY = 'NEYNAR_API_DOCS';
@@ -102,4 +103,4 @@ const result = await fetchPowerScore('429107');
 // // log the power score
 console.log(`Power score: ${JSON.stringify(result)}`);
 
-export { fetchPowerUsers };
+export { fetchPowerUsers, fetchPowerScore };
