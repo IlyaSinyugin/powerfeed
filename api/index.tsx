@@ -54,6 +54,7 @@ const neynarMiddleware = neynar({
 // function to generate a random hash string so that it's unlikely to collide with other generated hashes
 async function generateRandomHash() {
   const randomString = Math.random().toString(36).substring(7);
+  console.log(`Random hash generated: ${randomString}`);
   return randomString;
 }
 
@@ -322,7 +323,6 @@ app.frame("/", neynarMiddleware, async (c) => {
 //   });
 // });
 
-
 app.frame("/score/:id", neynarMiddleware, async (c) => {
   let hash = c.req.param("id");
   // check if hash exists in the db
@@ -332,14 +332,16 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     WHERE hash = ${hash}
   `;
 
-  let username, pfpUrl, fid, score;
+  let username, pfpUrl, fid: any, score;
 
   if (existingData.rows.length > 0) {
     // If the hash exists, retrieve the data
     ({ username, pfpurl: pfpUrl, fid, score } = existingData.rows[0]);
+    console.log(`Hash already exists with username ${username} and score ${score}`)
   } else {
     // If the hash does not exist, fetch the data from the external source
     ({ username, pfpUrl, fid } = c.var.interactor || {});
+    console.log(`Hash doesn't exist with username ${username} and fid ${fid}`)
     // check if that fid is already in the table
     const existingFid = await sql`
       SELECT username, pfpurl, fid, score, hash
@@ -352,7 +354,53 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       hash = existingFid.rows[0].hash;
       pfpUrl = existingFid.rows[0].pfpurl;
     } else {
-      const scoreData = await fetchPowerScore(fid?.toString());
+      let scoreData: any;
+      const fetchScore = async () => {
+        scoreData = await fetchPowerScore(fid?.toString());
+      };
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 3000)
+      );
+      try {
+        await Promise.race([fetchScore(), timeoutPromise]);
+      } catch (e) {
+        return c.res({
+          action: `/score/${hash}`,
+          image: (
+            <Box
+              grow
+              alignHorizontal="left"
+              backgroundColor="background"
+              padding="34"
+            >
+              <HStack gap="22">
+                <VStack gap="4">
+                  <Text color="white" size="24" decoration="solid" weight="800">
+                    Engagement is nice, but
+                  </Text>
+                  <Text color="white" size="24" decoration="solid" weight="900">
+                    what's your real
+                  </Text>
+                  <Text color="green" size="24" decoration="solid" weight="900">
+                    Farcaster Power?
+                  </Text>
+                </VStack>
+                <Box
+                  backgroundColor="background"
+                  alignHorizontal="right"
+                  alignVertical="bottom"
+                  height="256"
+                  width="192"
+                  overflow="hidden"
+                >
+                  <Image width="192" height="160" src="/img1.png" />
+                </Box>
+              </HStack>
+            </Box>
+          ),
+          intents: [<Button value="checkScore">Check your Power Score</Button>],
+        });
+      }
       score = scoreData?.data.rows[0]?.power_score || 1;
       if (score < 0) {
         score = 1;
@@ -363,12 +411,11 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
     `;
     }
-
   }
-  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`
+  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
   console.log(`Username: ${username}, FID: ${fid}, Score: ${score}`);
-  
+
   return c.res({
     image: (
       <Rows gap="1" grow>
@@ -442,7 +489,9 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     ),
     intents: [
       <Button.Link href={shareUrl}>Share</Button.Link>,
-      <Button action={`/`} value="checkScore">Score</Button>,
+      <Button action={`/`} value="checkScore">
+        Score
+      </Button>,
       <Button action="/gamerules" value="joinGame">
         Play
       </Button>,
