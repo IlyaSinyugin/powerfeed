@@ -141,7 +141,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           scoreData = await fetchPowerScore(fid?.toString());
         };
 
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000));
         try {
           await Promise.race([fetchScore(), timeoutPromise]);
         } catch (e) {
@@ -302,7 +302,7 @@ app.frame('/gamerules', neynarMiddleware, async (c) => {
       //imageAspectRatio: "1.91:1",
       intents: [
         <Button.Link href="https://warpcast.com/~/channel/powerfeed">/powerfeed</Button.Link>,
-        <Button value="zaglushka" action="/soon">Leaderboard (soon)</Button>,
+        <Button value="zaglushka" action="/soon">Leaderboard</Button>,
       ]
     });
   } else {
