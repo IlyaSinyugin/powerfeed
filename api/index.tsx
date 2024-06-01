@@ -203,7 +203,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           paddingTop="22"
           textAlign="center"
         >
-          <Text color="white" size="20" decoration="solid" weight="800">
+          <Text color="white" size="18" decoration="solid" weight="800">
           Power Score = power users engaged with your casts last week. Use it to give and earn $power in the /powerfeed game!
           </Text>
         </Row>
@@ -295,7 +295,7 @@ app.frame('/soon', neynarMiddleware, async (c) => {
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
 const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
-//devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
+devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
 
 export const GET = handle(app);
 export const POST = handle(app);
