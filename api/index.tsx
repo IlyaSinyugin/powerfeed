@@ -283,7 +283,6 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
 
 
 app.frame('/gamerules', neynarMiddleware, async (c) => {
-  console.log("Game Rules");
   // get the fid, username of the interactor 
   const { fid, username } = c.var.interactor || {};
 
@@ -357,7 +356,7 @@ app.frame('/soon', neynarMiddleware, async (c) => {
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
 const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
-devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
+//devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
 
 export const GET = handle(app);
 export const POST = handle(app);
