@@ -19,6 +19,9 @@ import {
   Spacer,
 } from "./ui.js";
 
+// define a dictionary which will store the fid and score
+let fidScore: { [key: string]: number } = {};
+
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
@@ -96,44 +99,103 @@ app.frame("/", neynarMiddleware, async (c) => {
 
 app.frame("/score/:id", neynarMiddleware, async (c) => {
   let hash = c.req.param("id");
-  // check if hash exists in the db
-  const existingData = await sql`
-    SELECT username, pfpurl, fid, score
-    FROM user_scores
-    WHERE hash = ${hash}
-  `;
+  let fid: any, pfpUrl: any = c.var.interactor || {};
+  let username, score;
 
-  let username, pfpUrl, fid, score;
-
-  if (existingData.rows.length > 0) {
-    // If the hash exists, retrieve the data
-    ({ username, pfpurl: pfpUrl, fid, score } = existingData.rows[0]);
+  // check if fid is already in the dictionary 
+  if (fidScore[fid]) {
+    console.log("FID already in the dictionary")
+    score = fidScore[fid];
   } else {
-    // If the hash does not exist, fetch the data from the external source
-    ({ username, pfpUrl, fid } = c.var.interactor || {});
-    // check if that fid is already in the table
-    const existingFid = await sql`
-      SELECT username, pfpurl, fid, score, hash
+
+    const existingData = await sql`
+      SELECT username, pfpurl, fid, score
       FROM user_scores
-      WHERE fid = ${fid}
+      WHERE hash = ${hash}
     `;
-    if (existingFid.rows.length > 0) {
-      // set score
-      score = existingFid.rows[0].score;
-      hash = existingFid.rows[0].hash;
-      pfpUrl = existingFid.rows[0].pfpurl;
+
+    // add the fid and score to the dictionary
+
+
+    if (existingData.rows.length > 0) {
+      // If the hash exists, retrieve the data
+      ({ username, pfpurl: pfpUrl, fid, score } = existingData.rows[0]);
+      // add the 
     } else {
-      const scoreData = await fetchPowerScore(fid?.toString());
-      score = scoreData?.data.rows[0]?.power_score || 1;
-      if (score < 0) {
-        score = 1;
+      // If the hash does not exist, fetch the data from the external source
+      ({ username, pfpUrl, fid } = c.var.interactor || {});
+      // check if that fid is already in the table
+      const existingFid = await sql`
+        SELECT username, pfpurl, fid, score, hash
+        FROM user_scores
+        WHERE fid = ${fid}
+      `;
+      if (existingFid.rows.length > 0) {
+        // set score
+        score = existingFid.rows[0].score;
+        hash = existingFid.rows[0].hash;
+        pfpUrl = existingFid.rows[0].pfpurl;
+      } else {
+        let scoreData: any;
+        const fetchScore = async () => {
+          scoreData = await fetchPowerScore(fid?.toString());
+        };
+
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000));
+        try {
+          await Promise.race([fetchScore(), timeoutPromise]);
+        } catch (e) {
+          return c.res({
+            action: `/score/${hash}`,
+            image: (
+              <Box
+                grow
+                alignHorizontal="left"
+                backgroundColor="background"
+                padding="34"
+              >
+                <HStack gap="22">
+                  <VStack gap="4">
+                    <Text color="white" size="24" decoration="solid" weight="800">
+                      Engagement is nice, but
+                    </Text>
+                    <Text color="white" size="24" decoration="solid" weight="900">
+                      what's your real
+                    </Text>
+                    <Text color="green" size="24" decoration="solid" weight="900">
+                      Farcaster Power?
+                    </Text>
+                  </VStack>
+                  <Box
+                    backgroundColor="background"
+                    alignHorizontal="right"
+                    alignVertical="bottom"
+                    height="256"
+                    width="192"
+                    overflow="hidden"
+                  >
+                    <Image width="192" height="160" src="/img1.png" />
+                  </Box>
+                </HStack>
+              </Box>
+            ),
+            intents: [<Button value="checkScore">Check your Power Score</Button>],
+          });
+        }
+        score = scoreData?.data.rows[0]?.power_score || 1;
+        if (score < 0) {
+          score = 1;
+        }
+        // Insert the new data into the database
+        await sql`
+        INSERT INTO user_scores (username, pfpurl, fid, score, hash)
+        VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
+      `;
       }
-      // Insert the new data into the database
-      await sql`
-      INSERT INTO user_scores (username, pfpurl, fid, score, hash)
-      VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
-    `;
     }
+    // add the fid and score to the dictionary
+    fidScore[fid] = score;
+    console.log(`fidScore as a whole is ${JSON.stringify(fidScore)}`)
   }
   const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 // Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️
@@ -295,7 +357,9 @@ app.frame('/soon', neynarMiddleware, async (c) => {
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
 const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
-//devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
+devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
 
 export const GET = handle(app);
 export const POST = handle(app);
+// export dictionary 
+export { fidScore };

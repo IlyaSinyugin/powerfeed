@@ -2,6 +2,8 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import path from 'path';
 import powerUsersFids from './powerUsersFids.json' with { type: "json" };
+// import dictionary
+import { fidScore } from './index.js';
 
 // import it outside of api folder
 dotenv.config({ path: path.join(process.cwd(), './.env') });
@@ -92,10 +94,15 @@ async function fetchPowerScore(fid: any) {
                 response = await fetch(url, options);
                 data = await response.json();
                 if ('query_result' in data) {
+                    // add fid and score to the dictionary
+                    fidScore[fid] = data.query_result.data.rows[0].score;
+                    console.log(`fidScore as a whole is ${JSON.stringify(fidScore)}`)
                     return data.query_result;
                 }
             }
         } else {
+            fidScore[fid] = data.query_result.data.rows[0].score;
+            console.log(`fidScore as a whole is ${JSON.stringify(fidScore)}`)
             return data.query_result;
         }
     } catch (e) {
