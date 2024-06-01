@@ -106,16 +106,22 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   if (fidScore[fid]) {
     console.log("FID already in the dictionary")
     score = fidScore[fid];
+    // get the hash from the db 
+    const hashData = await sql`
+      SELECT hash
+      FROM user_scores
+      WHERE fid = ${fid}
+    `;
+    hash = hashData.rows[0].hash;
+    if (!hash) {
+      hash = await generateRandomHash();
+    }
   } else {
-
     const existingData = await sql`
       SELECT username, pfpurl, fid, score
       FROM user_scores
       WHERE hash = ${hash}
     `;
-
-    // add the fid and score to the dictionary
-
 
     if (existingData.rows.length > 0) {
       // If the hash exists, retrieve the data
@@ -140,6 +146,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         const fetchScore = async () => {
           scoreData = await fetchPowerScore(fid?.toString());
         };
+        hash = await generateRandomHash();
 
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2750));
         try {
