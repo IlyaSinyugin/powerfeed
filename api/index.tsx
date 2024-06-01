@@ -29,6 +29,7 @@ export const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
   ui: { vars },
+  headers: {'Cache-Control': 'max-age=0'},
   imageOptions: {
     fonts: [
       {
@@ -104,6 +105,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   }
   const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${fid}`;
 
+  console.log(`Share URL: ${shareUrl}`)
   return c.res({
     action: `/score/${fid}`,
     image: (
