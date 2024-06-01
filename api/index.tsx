@@ -60,6 +60,7 @@ async function generateRandomHash() {
 
 app.frame("/", neynarMiddleware, async (c) => {
   const randomHash = await generateRandomHash();
+  console.log(`Random hash generated: ${randomHash}`)
   return c.res({
     action: `/score/${randomHash}`,
     image: (
@@ -331,6 +332,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     FROM user_scores
     WHERE hash = ${hash}
   `;
+
+  console.log(`Database lookup for hash ${hash} returned ${existingData.rows.length} rows`)
 
   let username, pfpUrl, fid: any, score;
 
