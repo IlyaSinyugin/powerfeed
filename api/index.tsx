@@ -38,6 +38,7 @@ export const app = new Frog({
         source: "google",
       },
     ],
+    headers: {'Cache-Control': 'max-age=0'},
   },
   // Supply a Hub to enable frame verification.
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
@@ -45,6 +46,7 @@ export const app = new Frog({
 
 export async function generateMetadata(): Promise<Metadata> {
   const url = process.env.VERCEL_URL || "http://localhost:5173";
+  console.log(`URL: ${url}`);
   const frameMetadata = await getFrameMetadata(`${url}/api`);
   return {
     other: frameMetadata,
@@ -56,8 +58,10 @@ const neynarMiddleware = neynar({
   features: ["interactor", "cast"],
 });
 
-app.frame("/", neynarMiddleware, (c) => {
+app.frame("/", neynarMiddleware, async (c) => {
+  console.log(`the interactor is ${JSON.stringify(c)}`)
   const { fid } = c.var.interactor || {};
+  console.log(`the fid here is ${fid}`)
   return c.res({
     action: `/score/${fid}`,
     image: (
