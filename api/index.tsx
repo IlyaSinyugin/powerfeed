@@ -359,6 +359,88 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         hash = existingFid.rows[0].hash;
         pfpUrl = existingFid.rows[0].pfpurl;
         console.log(`Existing data: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, hash: ${hash}`)
+        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        return c.res({
+          image: (
+            <Rows gap="1" grow>
+              <Row backgroundColor="background" height="2/7" />
+              <Divider color="green" />
+              <Row
+                backgroundColor="background"
+                height="3/7"
+                alignHorizontal="left"
+                alignVertical="center"
+                padding="16"
+              >
+                <HStack gap="18" alignHorizontal="center" alignVertical="center">
+                  <img
+                    //src="https://imgur.com/WImxm1D.jpeg"
+                    src={pfpUrl}
+                    width="128"
+                    height="128"
+                    style={{
+                      borderRadius: "0%",
+                      border: "3.5px solid #B1FC5A",
+                    }}
+                  />
+                  <VStack gap="1">
+                    <Text
+                      color="white"
+                      size="18"
+                      decoration="solid"
+                      weight="800"
+                      wrap="balance"
+                    >
+                      {username}
+                    </Text>
+                    <Text color="green" size="18" decoration="solid" weight="800">
+                      got the power!
+                    </Text>
+                  </VStack>
+                  <Spacer size="72" />
+                  <Box
+                    fontSize="18"
+                    color="white"
+                    fontStyle="JetBrains Mono"
+                    fontFamily="default"
+                    fontWeight="800"
+                    alignContent="center"
+                    alignVertical="center"
+                    paddingBottom="14"
+                    flexWrap="nowrap"
+                    display="flex"
+                  >
+                    Power Score: {score}
+                  </Box>
+                </HStack>
+              </Row>
+              <Divider color="green" />
+              <Row
+                backgroundColor="background"
+                height="3/7"
+                alignHorizontal="right"
+                paddingLeft="16"
+                paddingRight="16"
+                paddingTop="22"
+                textAlign="center"
+              >
+                <Text color="white" size="20" decoration="solid" weight="800">
+                  Power Score = power users engaged with your casts last week. Use it
+                  to give and earn $power in the /powerfeed game!
+                </Text>
+              </Row>
+            </Rows>
+          ),
+          intents: [
+            <Button.Link href={shareUrl}>Share</Button.Link>,
+            <Button action={`/`} value="checkScore">
+              Score
+            </Button>,
+            <Button action="/gamerules" value="joinGame">
+              Play
+            </Button>,
+          ],
+        });
       } else {
         console.log(`The fid ${fid} is not in the table`)
         let scoreData: any;
