@@ -2,7 +2,7 @@ import { Button, Frog } from "frog";
 import { devtools } from "frog/dev";
 import { getFrameMetadata } from "frog/next";
 import type { Metadata } from "next";
-import { sql } from '@vercel/postgres';
+import { sql } from "@vercel/postgres";
 import { serveStatic } from "frog/serve-static";
 import { neynar, type NeynarVariables } from "frog/middlewares";
 // import { neynar } from 'frog/hubs'
@@ -30,7 +30,7 @@ export const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
   ui: { vars },
-  headers: {'Cache-Control': 'max-age=3200'},
+  headers: { "Cache-Control": "max-age=3200" },
   imageOptions: {
     fonts: [
       {
@@ -39,7 +39,7 @@ export const app = new Frog({
         source: "google",
       },
     ],
-    headers: {'Cache-Control': 'max-age=3200'},
+    headers: { "Cache-Control": "max-age=3200" },
   },
   // Supply a Hub to enable frame verification.
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
@@ -114,21 +114,32 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   } else {
     // If the hash does not exist, fetch the data from the external source
     const { username, pfpUrl, fid } = c.var.interactor || {};
-    const scoreData = await fetchPowerScore(fid?.toString());
-    score = scoreData?.data.rows[0]?.power_score || 1;
-    if (score < 0) {
-      score = 1;
-    }
+    // check if that fid is already in the table
+    const existingFid = await sql`
+      SELECT username, pfpurl, fid, score
+      FROM user_scores
+      WHERE fid = ${fid}
+    `;
+    if (existingFid.rows.length > 0) {
+      // set score
+      score = existingFid.rows[0].score;
+    } else {
+      const scoreData = await fetchPowerScore(fid?.toString());
+      score = scoreData?.data.rows[0]?.power_score || 1;
+      if (score < 0) {
+        score = 1;
+      }
 
-    // Insert the new data into the database
-    await sql`
+      // Insert the new data into the database
+      await sql`
       INSERT INTO user_scores (username, pfpurl, fid, score, hash)
       VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
     `;
+    }
   }
   const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
-  console.log(`Share URL: ${shareUrl}`)
+  console.log(`Share URL: ${shareUrl}`);
   return c.res({
     action: `/score/${hash}`,
     image: (
