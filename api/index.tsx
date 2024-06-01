@@ -211,9 +211,9 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     ),
     intents: [
       <Button.Link href={shareUrl}>Share</Button.Link>,
-      <Button action={`/score/${hash}`} value="checkScore">Check your score</Button>,
+      <Button action={`/score/${hash}`} value="checkScore">Score</Button>,
       <Button action="/gamerules" value="joinGame">
-        Join the game
+        Play
       </Button>,
     ],
   });
@@ -295,7 +295,7 @@ app.frame('/soon', neynarMiddleware, async (c) => {
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
 const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
-devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
+//devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
 
 export const GET = handle(app);
 export const POST = handle(app);
