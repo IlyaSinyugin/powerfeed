@@ -149,7 +149,6 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
 
   console.log(`pfp url ${pfpUrl}`)
   return c.res({
-    action: `/score/${hash}`,
     image: (
       <Rows gap="1" grow>
         <Row backgroundColor="background" height="2/7" />
@@ -222,13 +221,28 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     ),
     intents: [
       <Button.Link href={shareUrl}>Share</Button.Link>,
-      <Button value="checkScore">Check your score</Button>,
-      <Button.Link href="https://warpcast.com/~/channel/powerfeed">
+      <Button action={`/score/${hash}`} value="checkScore">Check your score</Button>,
+      <Button action="/gamerules" value="joinGame">
         Join the game
-      </Button.Link>,
+      </Button>,
     ],
   });
 });
+
+
+app.frame('/gamerules', (c) => {
+  console.log("Game Rules");
+  return c.res({
+    action: "/gamerules",
+    image: "https://i.imgur.com/hxX85GY.png",
+    //imageAspectRatio: "1.91:1",
+    intents: [
+      <Button.Link href="https://warpcast.com/~/channel/powerfeed">go to /powerfeed</Button.Link>,
+      <Button value="zaglushka">Leaderbord (soon)</Button>
+    ]
+  })
+});
+
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
 const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
