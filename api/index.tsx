@@ -1,13 +1,11 @@
 import { Button, Frog } from "frog";
 import { devtools } from "frog/dev";
-import { getFrameMetadata } from "frog/next";
-import type { Metadata } from "next";
 import { sql } from "@vercel/postgres";
 import { serveStatic } from "frog/serve-static";
 import { neynar, type NeynarVariables } from "frog/middlewares";
 // import { neynar } from 'frog/hubs'
 import { handle } from "frog/vercel";
-import { fetchPowerUsers, fetchPowerScore } from "./helpers.js";
+import { fetchPowerScore } from "./helpers.js";
 import {
   Row,
   Rows,
@@ -98,8 +96,6 @@ app.frame("/", neynarMiddleware, async (c) => {
 
 app.frame("/score/:id", neynarMiddleware, async (c) => {
   let hash = c.req.param("id");
-  console.log(`Hash: ${hash}`)
-
   // check if hash exists in the db
   const existingData = await sql`
     SELECT username, pfpurl, fid, score
@@ -121,15 +117,11 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       FROM user_scores
       WHERE fid = ${fid}
     `;
-    console.log(`Existing FID: ${JSON.stringify(existingFid.rows)}`)
     if (existingFid.rows.length > 0) {
       // set score
       score = existingFid.rows[0].score;
       hash = existingFid.rows[0].hash;
       pfpUrl = existingFid.rows[0].pfpurl;
-      console.log(`Existing FID Score: ${score}`)
-      console.log(`Existing FID Hash: ${hash}`)
-      console.log(`Existing FID pfpUrl: ${pfpUrl}`)
     } else {
       const scoreData = await fetchPowerScore(fid?.toString());
       score = scoreData?.data.rows[0]?.power_score || 1;
@@ -145,9 +137,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   }
   const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
-  console.log(`Share URL: ${shareUrl}`);
-
-  console.log(`pfp url ${pfpUrl}`)
+  console.log(`Username: ${username}, FID: ${fid}, Score: ${score}`);
+  
   return c.res({
     image: (
       <Rows gap="1" grow>
@@ -213,8 +204,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           textAlign="center"
         >
           <Text color="white" size="20" decoration="solid" weight="800">
-            Power Score = power users engaged with your casts last week. Use it
-            to earn and give $power to cool casts in /powerfeed!
+          Power Score = power users engaged with your casts last week. Use it to give and earn $power in the /powerfeed game!
           </Text>
         </Row>
       </Rows>
