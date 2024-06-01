@@ -114,24 +114,28 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     ({ username, pfpurl: pfpUrl, fid, score } = existingData.rows[0]);
   } else {
     // If the hash does not exist, fetch the data from the external source
-    const { username, pfpUrl, fid } = c.var.interactor || {};
+    ({ username, pfpUrl, fid } = c.var.interactor || {});
     // check if that fid is already in the table
     const existingFid = await sql`
-      SELECT username, pfpurl, fid, score
+      SELECT username, pfpurl, fid, score, hash
       FROM user_scores
       WHERE fid = ${fid}
     `;
+    console.log(`Existing FID: ${JSON.stringify(existingFid.rows)}`)
     if (existingFid.rows.length > 0) {
       // set score
       score = existingFid.rows[0].score;
       hash = existingFid.rows[0].hash;
+      pfpUrl = existingFid.rows[0].pfpurl;
+      console.log(`Existing FID Score: ${score}`)
+      console.log(`Existing FID Hash: ${hash}`)
+      console.log(`Existing FID pfpUrl: ${pfpUrl}`)
     } else {
       const scoreData = await fetchPowerScore(fid?.toString());
       score = scoreData?.data.rows[0]?.power_score || 1;
       if (score < 0) {
         score = 1;
       }
-
       // Insert the new data into the database
       await sql`
       INSERT INTO user_scores (username, pfpurl, fid, score, hash)
@@ -142,6 +146,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
   console.log(`Share URL: ${shareUrl}`);
+
+  console.log(`pfp url ${pfpUrl}`)
   return c.res({
     action: `/score/${hash}`,
     image: (
