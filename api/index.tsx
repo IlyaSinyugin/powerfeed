@@ -312,7 +312,7 @@ app.frame('/gamerules', neynarMiddleware, async (c) => {
       //imageAspectRatio: "1.91:1",
       intents: [
         <Button.Link href="https://warpcast.com/~/channel/powerfeed">/powerfeed</Button.Link>,
-        <Button value="zaglushka" action="/soon">Leaderboard (soon)</Button>,
+        <Button value="zaglushka" action="/soon">Leaderboard</Button>,
       ]
     });
   }
