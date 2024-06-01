@@ -325,6 +325,7 @@ app.frame("/", neynarMiddleware, async (c) => {
 // });
 
 app.frame("/score/:id", neynarMiddleware, async (c) => {
+  let username, pfpUrl, fid: any, score;
   let hash = c.req.param("id");
   // check if hash exists in the db
   const existingData = await sql`
@@ -343,48 +344,168 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       console.log(
         "Hash exists in the database but interactor fid is not equal to the fid from the database"
       );
-      return c.res({
-        action: "/",
-        image: (
-          <Box
-            grow
-            alignHorizontal="left"
-            backgroundColor="background"
-            padding="34"
-          >
-            <HStack gap="22">
-              <VStack gap="4">
-                <Text color="white" size="24" decoration="solid" weight="800">
-                  Engagement is nice, but
-                </Text>
-                <Text color="white" size="24" decoration="solid" weight="900">
-                  what's your real
-                </Text>
-                <Text color="green" size="24" decoration="solid" weight="900">
-                  Farcaster Power?
-                </Text>
-              </VStack>
+      ({ username, pfpUrl, fid } = c.var.interactor || {});
+      console.log(`INTERACTOR DATA Username: ${username}, FID: ${fid}, Score: ${score}`);
+      // check if that fid is already in the table
+      const existingFid = await sql`
+        SELECT username, pfpurl, fid, score, hash
+        FROM user_scores
+        WHERE fid = ${fid}
+      `;
+      if (existingFid.rows.length > 0) {
+        // set score
+        score = existingFid.rows[0].score;
+        hash = existingFid.rows[0].hash;
+        pfpUrl = existingFid.rows[0].pfpurl;
+      } else {
+        let scoreData: any;
+        // TODO: maybe add hash generation here
+        let hash = await generateRandomHash();
+        const fetchScore = async () => {
+          scoreData = await fetchPowerScore(fid?.toString());
+        };
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 3000)
+        );
+        try {
+          await Promise.race([fetchScore(), timeoutPromise]);
+        } catch (e) {
+          return c.res({
+            action: `/score/${hash}`,
+            image: (
               <Box
+                grow
+                alignHorizontal="left"
                 backgroundColor="background"
-                alignHorizontal="right"
-                alignVertical="bottom"
-                height="256"
-                width="192"
-                overflow="hidden"
+                padding="34"
               >
-                <Image width="192" height="160" src="/img1.png" />
+                <HStack gap="22">
+                  <VStack gap="4">
+                    <Text color="white" size="24" decoration="solid" weight="800">
+                      Engagement is nice, but
+                    </Text>
+                    <Text color="white" size="24" decoration="solid" weight="900">
+                      what's your real
+                    </Text>
+                    <Text color="green" size="24" decoration="solid" weight="900">
+                      Farcaster Power?
+                    </Text>
+                  </VStack>
+                  <Box
+                    backgroundColor="background"
+                    alignHorizontal="right"
+                    alignVertical="bottom"
+                    height="256"
+                    width="192"
+                    overflow="hidden"
+                  >
+                    <Image width="192" height="160" src="/img1.png" />
+                  </Box>
+                </HStack>
               </Box>
-            </HStack>
-          </Box>
+            ),
+            intents: [<Button value="checkScore">Check your Power Score</Button>],
+          });
+        }
+        score = scoreData?.data.rows[0]?.power_score || 1;
+        if (score < 0) {
+          score = 1;
+        }
+        // Insert the new data into the database
+        await sql`
+        INSERT INTO user_scores (username, pfpurl, fid, score, hash)
+        VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
+      `;
+      console.log(`Inserted new data, such as username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, hash: ${hash}`)
+      const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+      return c.res({
+        image: (
+          <Rows gap="1" grow>
+            <Row backgroundColor="background" height="2/7" />
+            <Divider color="green" />
+            <Row
+              backgroundColor="background"
+              height="3/7"
+              alignHorizontal="left"
+              alignVertical="center"
+              padding="16"
+            >
+              <HStack gap="18" alignHorizontal="center" alignVertical="center">
+                <img
+                  //src="https://imgur.com/WImxm1D.jpeg"
+                  src={pfpUrl}
+                  width="128"
+                  height="128"
+                  style={{
+                    borderRadius: "0%",
+                    border: "3.5px solid #B1FC5A",
+                  }}
+                />
+                <VStack gap="1">
+                  <Text
+                    color="white"
+                    size="18"
+                    decoration="solid"
+                    weight="800"
+                    wrap="balance"
+                  >
+                    {username}
+                  </Text>
+                  <Text color="green" size="18" decoration="solid" weight="800">
+                    got the power!
+                  </Text>
+                </VStack>
+                <Spacer size="72" />
+                <Box
+                  fontSize="18"
+                  color="white"
+                  fontStyle="JetBrains Mono"
+                  fontFamily="default"
+                  fontWeight="800"
+                  alignContent="center"
+                  alignVertical="center"
+                  paddingBottom="14"
+                  flexWrap="nowrap"
+                  display="flex"
+                >
+                  Power Score: {score}
+                </Box>
+              </HStack>
+            </Row>
+            <Divider color="green" />
+            <Row
+              backgroundColor="background"
+              height="3/7"
+              alignHorizontal="right"
+              paddingLeft="16"
+              paddingRight="16"
+              paddingTop="22"
+              textAlign="center"
+            >
+              <Text color="white" size="20" decoration="solid" weight="800">
+                Power Score = power users engaged with your casts last week. Use it
+                to give and earn $power in the /powerfeed game!
+              </Text>
+            </Row>
+          </Rows>
         ),
-        intents: [<Button value="checkScore">Check your Power Score</Button>],
+        intents: [
+          <Button.Link href={shareUrl}>Share</Button.Link>,
+          <Button action={`/`} value="checkScore">
+            Score
+          </Button>,
+          <Button action="/gamerules" value="joinGame">
+            Play
+          </Button>,
+        ],
       });
+    }
+
     }
   }
 
   console.log(`Database lookup for hash ${hash} returned ${existingData.rows.length} rows and interactor ${JSON.stringify(c.var.interactor)}`)
 
-  let username, pfpUrl, fid: any, score;
 
   if (existingData.rows.length > 0) {
     // If the hash exists, retrieve the data
