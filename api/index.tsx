@@ -97,7 +97,8 @@ app.frame("/", neynarMiddleware, async (c) => {
 });
 
 app.frame("/score/:id", neynarMiddleware, async (c) => {
-  const hash = c.req.param("id");
+  let hash = c.req.param("id");
+  console.log(`Hash: ${hash}`)
 
   // check if hash exists in the db
   const existingData = await sql`
@@ -123,6 +124,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     if (existingFid.rows.length > 0) {
       // set score
       score = existingFid.rows[0].score;
+      hash = existingFid.rows[0].hash;
     } else {
       const scoreData = await fetchPowerScore(fid?.toString());
       score = scoreData?.data.rows[0]?.power_score || 1;
