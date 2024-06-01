@@ -99,9 +99,67 @@ app.frame("/", neynarMiddleware, async (c) => {
 
 app.frame("/score/:id", neynarMiddleware, async (c) => {
   let hash = c.req.param("id");
-  let fid: any,
-    pfpUrl: any = c.var.interactor || {};
+  let fid: any, pfpUrl: any = c.var.interactor || {};
   let username, score;
+
+  // if fid is undefined, then display the default image 
+  if (!fid) {
+    console.log("FID is undefined");
+    hash = await generateRandomHash();
+    return c.res({
+      action: `/score/${hash}`,
+      image: (
+        <Box
+          grow
+          alignHorizontal="left"
+          backgroundColor="background"
+          padding="34"
+        >
+          <HStack gap="22">
+            <VStack gap="4">
+              <Text
+                color="white"
+                size="24"
+                decoration="solid"
+                weight="800"
+              >
+                Engagement is nice, but
+              </Text>
+              <Text
+                color="white"
+                size="24"
+                decoration="solid"
+                weight="900"
+              >
+                what's your real
+              </Text>
+              <Text
+                color="green"
+                size="24"
+                decoration="solid"
+                weight="900"
+              >
+                Farcaster Power?
+              </Text>
+            </VStack>
+            <Box
+              backgroundColor="background"
+              alignHorizontal="right"
+              alignVertical="bottom"
+              height="256"
+              width="192"
+              overflow="hidden"
+            >
+              <Image width="192" height="160" src="/img1.png" />
+            </Box>
+          </HStack>
+        </Box>
+      ),
+      intents: [
+        <Button value="checkScore">Check your Power Score</Button>,
+      ],
+    });
+  }
 
   // check if fid is already in the dictionary
   if (fidScore[fid]) {
