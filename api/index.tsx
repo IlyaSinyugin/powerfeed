@@ -29,7 +29,7 @@ export const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
   ui: { vars },
-  headers: {'Cache-Control': 'max-age=0'},
+  headers: {'Cache-Control': 'max-age=3200'},
   imageOptions: {
     fonts: [
       {
@@ -38,7 +38,7 @@ export const app = new Frog({
         source: "google",
       },
     ],
-    headers: {'Cache-Control': 'max-age=0'},
+    headers: {'Cache-Control': 'max-age=3200'},
   },
   // Supply a Hub to enable frame verification.
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
