@@ -353,11 +353,14 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         WHERE fid = ${fid}
       `;
       if (existingFid.rows.length > 0) {
+        console.log(`The fid ${fid} is already in the table`)
         // set score
         score = existingFid.rows[0].score;
         hash = existingFid.rows[0].hash;
         pfpUrl = existingFid.rows[0].pfpurl;
+        console.log(`Existing data: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, hash: ${hash}`)
       } else {
+        console.log(`The fid ${fid} is not in the table`)
         let scoreData: any;
         // TODO: maybe add hash generation here
         let hash = await generateRandomHash();
