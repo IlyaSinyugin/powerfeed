@@ -333,6 +333,55 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     WHERE hash = ${hash}
   `;
 
+  // if c.var.interactor.fid exists and if existingData is not empty 
+  if (c.var.interactor?.fid && existingData.rows.length > 0) {
+    if (c.var.interactor.fid === existingData.rows[0].fid) {
+      console.log(
+        "Hash exists in the database and interactor fid is equal to the fid from the database"
+      );
+    } else {
+      console.log(
+        "Hash exists in the database but interactor fid is not equal to the fid from the database"
+      );
+      return c.res({
+        action: "/",
+        image: (
+          <Box
+            grow
+            alignHorizontal="left"
+            backgroundColor="background"
+            padding="34"
+          >
+            <HStack gap="22">
+              <VStack gap="4">
+                <Text color="white" size="24" decoration="solid" weight="800">
+                  Engagement is nice, but
+                </Text>
+                <Text color="white" size="24" decoration="solid" weight="900">
+                  what's your real
+                </Text>
+                <Text color="green" size="24" decoration="solid" weight="900">
+                  Farcaster Power?
+                </Text>
+              </VStack>
+              <Box
+                backgroundColor="background"
+                alignHorizontal="right"
+                alignVertical="bottom"
+                height="256"
+                width="192"
+                overflow="hidden"
+              >
+                <Image width="192" height="160" src="/img1.png" />
+              </Box>
+            </HStack>
+          </Box>
+        ),
+        intents: [<Button value="checkScore">Check your Power Score</Button>],
+      });
+    }
+  }
+
   console.log(`Database lookup for hash ${hash} returned ${existingData.rows.length} rows and interactor ${JSON.stringify(c.var.interactor)}`)
 
   let username, pfpUrl, fid: any, score;
