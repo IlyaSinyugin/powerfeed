@@ -99,14 +99,15 @@ app.frame("/", neynarMiddleware, async (c) => {
 
 app.frame("/score/:id", neynarMiddleware, async (c) => {
   let hash = c.req.param("id");
-  let fid: any, pfpUrl: any = c.var.interactor || {};
+  let fid: any,
+    pfpUrl: any = c.var.interactor || {};
   let username, score;
 
-  // check if fid is already in the dictionary 
+  // check if fid is already in the dictionary
   if (fidScore[fid]) {
-    console.log("FID already in the dictionary")
+    console.log("FID already in the dictionary");
     score = fidScore[fid];
-    // get the hash from the db 
+    // get the hash from the db
     const hashData = await sql`
       SELECT hash
       FROM user_scores
@@ -116,18 +117,29 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     if (!hash) {
       hash = await generateRandomHash();
     }
+
+    console.log(`fid hash username score ${fid} ${hash} ${username} ${score}`);
   } else {
+    // not in the dictionary, meaning that it's new
     const existingData = await sql`
       SELECT username, pfpurl, fid, score
       FROM user_scores
       WHERE hash = ${hash}
     `;
 
-    if (existingData.rows.length > 0) {
-      // If the hash exists, retrieve the data
+    if (
+      existingData.rows.length > 0 &&
+      c.var.interactor?.fid === existingData.rows[0].fid
+    ) {
+      console.log(
+        "Hash exists in the database and interactor fid is equal to the fid from the database"
+      );
+      // If the hash exists, retrieve the data only if the interactor fid is equal to the fid from the database
       ({ username, pfpurl: pfpUrl, fid, score } = existingData.rows[0]);
-      // add the 
     } else {
+      console.log(
+        "Hash does not exist in the database or interactor fid is not equal to the fid from the database"
+      );
       // If the hash does not exist, fetch the data from the external source
       ({ username, pfpUrl, fid } = c.var.interactor || {});
       // check if that fid is already in the table
@@ -142,13 +154,16 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         hash = existingFid.rows[0].hash;
         pfpUrl = existingFid.rows[0].pfpurl;
       } else {
+        // if the fid is not in the table, fetch the score
         let scoreData: any;
+        hash = await generateRandomHash();
         const fetchScore = async () => {
           scoreData = await fetchPowerScore(fid?.toString());
         };
-        hash = await generateRandomHash();
 
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2750));
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 2750)
+        );
         try {
           await Promise.race([fetchScore(), timeoutPromise]);
         } catch (e) {
@@ -163,13 +178,28 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
               >
                 <HStack gap="22">
                   <VStack gap="4">
-                    <Text color="white" size="24" decoration="solid" weight="800">
+                    <Text
+                      color="white"
+                      size="24"
+                      decoration="solid"
+                      weight="800"
+                    >
                       Engagement is nice, but
                     </Text>
-                    <Text color="white" size="24" decoration="solid" weight="900">
+                    <Text
+                      color="white"
+                      size="24"
+                      decoration="solid"
+                      weight="900"
+                    >
                       what's your real
                     </Text>
-                    <Text color="green" size="24" decoration="solid" weight="900">
+                    <Text
+                      color="green"
+                      size="24"
+                      decoration="solid"
+                      weight="900"
+                    >
                       Farcaster Power?
                     </Text>
                   </VStack>
@@ -186,7 +216,9 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                 </HStack>
               </Box>
             ),
-            intents: [<Button value="checkScore">Check your Power Score</Button>],
+            intents: [
+              <Button value="checkScore">Check your Power Score</Button>,
+            ],
           });
         }
         score = scoreData?.data.rows[0]?.power_score || 1;
@@ -202,10 +234,10 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     }
     // add the fid and score to the dictionary
     fidScore[fid] = score;
-    console.log(`fidScore as a whole is ${JSON.stringify(fidScore)}`)
+    console.log(`fidScore as a whole is ${JSON.stringify(fidScore)}`);
   }
   const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
-// Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️
+  // Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️
   console.log(`Username: ${username}, FID: ${fid}, Score: ${score}`);
 
   return c.res({
@@ -273,14 +305,17 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           textAlign="center"
         >
           <Text color="white" size="18" decoration="solid" weight="800">
-          Power Score = power users engaged with your casts last week. Use it to give and earn $power in the /powerfeed game!
+            Power Score = power users engaged with your casts last week. Use it
+            to give and earn $power in the /powerfeed game!
           </Text>
         </Row>
       </Rows>
     ),
     intents: [
       <Button.Link href={shareUrl}>Share</Button.Link>,
-      <Button action={`/score/${hash}`} value="checkScore">Score</Button>,
+      <Button action={`/score/${hash}`} value="checkScore">
+        Score
+      </Button>,
       <Button action="/gamerules" value="joinGame">
         Play
       </Button>,
@@ -288,9 +323,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   });
 });
 
-
-app.frame('/gamerules', neynarMiddleware, async (c) => {
-  // get the fid, username of the interactor 
+app.frame("/gamerules", neynarMiddleware, async (c) => {
+  // get the fid, username of the interactor
   const { fid, username } = c.var.interactor || {};
 
   // get the hash of the interactor from the db
@@ -308,9 +342,13 @@ app.frame('/gamerules', neynarMiddleware, async (c) => {
       image: "https://i.imgur.com/hxX85GY.png",
       //imageAspectRatio: "1.91:1",
       intents: [
-        <Button.Link href="https://warpcast.com/~/channel/powerfeed">/powerfeed</Button.Link>,
-        <Button value="zaglushka" action="/soon">Leaderboard</Button>,
-      ]
+        <Button.Link href="https://warpcast.com/~/channel/powerfeed">
+          /powerfeed
+        </Button.Link>,
+        <Button value="zaglushka" action="/soon">
+          Leaderboard
+        </Button>,
+      ],
     });
   } else {
     return c.res({
@@ -318,16 +356,20 @@ app.frame('/gamerules', neynarMiddleware, async (c) => {
       image: "https://i.imgur.com/hxX85GY.png",
       //imageAspectRatio: "1.91:1",
       intents: [
-        <Button.Link href="https://warpcast.com/~/channel/powerfeed">/powerfeed</Button.Link>,
-        <Button value="zaglushka" action="/soon">Leaderboard</Button>,
-      ]
+        <Button.Link href="https://warpcast.com/~/channel/powerfeed">
+          /powerfeed
+        </Button.Link>,
+        <Button value="zaglushka" action="/soon">
+          Leaderboard
+        </Button>,
+      ],
     });
   }
 });
 
 // new frame called soon with image - https://i.imgur.com/wDggw1i.png and button Back that takes back to /score
-app.frame('/soon', neynarMiddleware, async (c) => {
-  // get the fid, username of the interactor 
+app.frame("/soon", neynarMiddleware, async (c) => {
+  // get the fid, username of the interactor
   const { fid, username } = c.var.interactor || {};
 
   // get the hash of the interactor from the db
@@ -345,8 +387,10 @@ app.frame('/soon', neynarMiddleware, async (c) => {
       image: "https://i.imgur.com/wDggw1i.png",
       //imageAspectRatio: "1.91:1",
       intents: [
-        <Button value="backbutton" action={`/score/${hash}`}>Back</Button>
-      ]
+        <Button value="backbutton" action={`/score/${hash}`}>
+          Back
+        </Button>,
+      ],
     });
   } else {
     return c.res({
@@ -354,8 +398,10 @@ app.frame('/soon', neynarMiddleware, async (c) => {
       image: "https://i.imgur.com/wDggw1i.png",
       //imageAspectRatio: "1.91:1",
       intents: [
-        <Button value="backbutton" action="/">Back</Button>
-      ]
+        <Button value="backbutton" action="/">
+          Back
+        </Button>,
+      ],
     });
   }
 });
@@ -367,5 +413,5 @@ const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
 
 export const GET = handle(app);
 export const POST = handle(app);
-// export dictionary 
+// export dictionary
 export { fidScore };
