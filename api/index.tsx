@@ -98,9 +98,10 @@ app.frame("/", neynarMiddleware, async (c) => {
 app.frame("/score/:id", neynarMiddleware, async (c) => {
   const hash = c.req.param("id");
 
-  const { username, pfpUrl, fid } = c.var.interactor || {};
-  const scoreData = await fetchPowerScore(fid?.toString());
-  let score = scoreData?.data.rows[0]?.power_score || 1;
+  //const { username, pfpUrl, fid } = c.var.interactor || {};
+  //const scoreData = await fetchPowerScore(fid?.toString());
+  //let score = scoreData?.data.rows[0]?.power_score || 1;
+  let score = 1;
   if (score < 0) {
     score = 1;
   }
@@ -122,8 +123,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         >
           <HStack gap="18" alignHorizontal="center" alignVertical="center">
             <img
-              //src="https://imgur.com/WImxm1D.jpeg"
-              src={pfpUrl}
+              src="https://imgur.com/WImxm1D.jpeg"
+              //src={pfpUrl}
               width="128"
               height="128"
               style={{
@@ -139,7 +140,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                 weight="800"
                 wrap="balance"
               >
-                {username}
+                {/*username*/}
+                test
               </Text>
               <Text color="green" size="18" decoration="solid" weight="800">
                 got the power!
