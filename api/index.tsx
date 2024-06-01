@@ -365,7 +365,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     }
 
   }
-  const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`
 
   console.log(`Username: ${username}, FID: ${fid}, Score: ${score}`);
   
