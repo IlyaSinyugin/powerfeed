@@ -44,15 +44,6 @@ export const app = new Frog({
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  const url = process.env.VERCEL_URL || "http://localhost:5173";
-  console.log(`URL: ${url}`);
-  const frameMetadata = await getFrameMetadata(`${url}/api`);
-  return {
-    other: frameMetadata,
-  };
-}
-
 const neynarMiddleware = neynar({
   apiKey: "NEYNAR_FROG_FM",
   features: ["interactor", "cast"],
