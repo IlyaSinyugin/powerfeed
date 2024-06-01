@@ -141,7 +141,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           scoreData = await fetchPowerScore(fid?.toString());
         };
 
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2750));
         try {
           await Promise.race([fetchScore(), timeoutPromise]);
         } catch (e) {
