@@ -49,12 +49,16 @@ const neynarMiddleware = neynar({
   features: ["interactor", "cast"],
 });
 
+// function to generate a random hash string so that it's unlikely to collide with other generated hashes
+async function generateRandomHash() {
+  const randomString = Math.random().toString(36).substring(7);
+  return randomString;
+}
+
 app.frame("/", neynarMiddleware, async (c) => {
-  console.log(`the interactor is ${JSON.stringify(c)}`)
-  const { fid } = c.var.interactor || {};
-  console.log(`the fid here is ${fid}`)
+  const randomHash = await generateRandomHash();
   return c.res({
-    action: `/score/${fid}`,
+    action: `/score/${randomHash}`,
     image: (
       <Box
         grow
@@ -92,17 +96,19 @@ app.frame("/", neynarMiddleware, async (c) => {
 });
 
 app.frame("/score/:id", neynarMiddleware, async (c) => {
-  const { username, fid, pfpUrl } = c.var.interactor || {};
+  const hash = c.req.param("id");
+
+  const { username, pfpUrl, fid } = c.var.interactor || {};
   const scoreData = await fetchPowerScore(fid?.toString());
   let score = scoreData?.data.rows[0]?.power_score || 1;
   if (score < 0) {
     score = 1;
   }
-  const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${fid}`;
+  const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
   console.log(`Share URL: ${shareUrl}`)
   return c.res({
-    action: `/score/${fid}`,
+    action: `/score/${hash}`,
     image: (
       <Rows gap="1" grow>
         <Row backgroundColor="background" height="2/7" />
