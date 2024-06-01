@@ -1,7 +1,7 @@
 import fs from 'fs';
 import dotenv from 'dotenv';
 import path from 'path';
-import powerUsersFids from './powerUsersFids.json';
+import powerUsersFids from './powerUsersFids.json' with { type: "json" };
 
 // import it outside of api folder
 dotenv.config({ path: path.join(process.cwd(), './.env') });
@@ -61,7 +61,7 @@ async function fetchPowerScore(fid: any) {
     const url = `https://data.hubs.neynar.com/api/queries/666/results`;
     // load all of fids from powerUsers.txt into a string separated by commas
     //const powerUsers = fs.readFileSync('/api/powerUsers.txt', 'utf8'); // TODO: fetch from database later on
-    
+
     // get powerusers from powerUsersFids.json
     const powerUsers = powerUsersFids.join(',');
     //console.log(`Power users: ${powerUsers}`)
@@ -76,9 +76,10 @@ async function fetchPowerScore(fid: any) {
     // make a post request 
     const options = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json',
+        headers: {
+            'Content-Type': 'application/json',
             Authorization: `Key ${REDASH_API}`
-         },
+        },
         body: JSON.stringify(payload),
     };
     try {

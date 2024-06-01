@@ -1,9 +1,9 @@
 import { Button, Frog } from "frog";
 import { devtools } from "frog/dev";
-import { getFrameMetadata } from 'frog/next';
-import type { Metadata } from 'next';
+import { getFrameMetadata } from "frog/next";
+import type { Metadata } from "next";
 import { serveStatic } from "frog/serve-static";
-import { neynar, type NeynarVariables } from 'frog/middlewares'
+import { neynar, type NeynarVariables } from "frog/middlewares";
 // import { neynar } from 'frog/hubs'
 import { handle } from "frog/vercel";
 import { fetchPowerUsers, fetchPowerScore } from "./helpers.js";
@@ -43,17 +43,17 @@ export const app = new Frog({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const url = process.env.VERCEL_URL || 'http://localhost:5173'
-  const frameMetadata = await getFrameMetadata(`${url}/api`)
+  const url = process.env.VERCEL_URL || "http://localhost:5173";
+  const frameMetadata = await getFrameMetadata(`${url}/api`);
   return {
     other: frameMetadata,
-  }
+  };
 }
 
 const neynarMiddleware = neynar({
-  apiKey: 'NEYNAR_FROG_FM',
-  features: ['interactor', 'cast'],
-})
+  apiKey: "NEYNAR_FROG_FM",
+  features: ["interactor", "cast"],
+});
 
 app.frame("/", neynarMiddleware, (c) => {
   const { fid } = c.var.interactor || {};
@@ -101,7 +101,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   let score = scoreData?.data.rows[0]?.power_score || 1;
   if (score < 0) {
     score = 1;
-  };  
+  }
   const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${fid}`;
 
   return c.res({
@@ -119,7 +119,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         >
           <HStack gap="18" alignHorizontal="center" alignVertical="center">
             <img
-             //src="https://imgur.com/WImxm1D.jpeg"
+              //src="https://imgur.com/WImxm1D.jpeg"
               src={pfpUrl}
               width="128"
               height="128"
@@ -137,7 +137,6 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                 wrap="balance"
               >
                 {username}
-                
               </Text>
               <Text color="green" size="18" decoration="solid" weight="800">
                 got the power!
@@ -171,16 +170,19 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           textAlign="center"
         >
           <Text color="white" size="20" decoration="solid" weight="800">
-          Power Score = power users engaged with your casts last week. Use it to earn and give $power to cool casts in /powerfeed!
+            Power Score = power users engaged with your casts last week. Use it
+            to earn and give $power to cool casts in /powerfeed!
           </Text>
         </Row>
       </Rows>
     ),
     intents: [
-    <Button.Link href={shareUrl}>Share</Button.Link>,
-    <Button value="checkScore">Check your score</Button>,
-    <Button.Link href="https://warpcast.com/~/channel/powerfeed">Join the game</Button.Link>
-  ],
+      <Button.Link href={shareUrl}>Share</Button.Link>,
+      <Button value="checkScore">Check your score</Button>,
+      <Button.Link href="https://warpcast.com/~/channel/powerfeed">
+        Join the game
+      </Button.Link>,
+    ],
   });
 });
 // @ts-ignore
