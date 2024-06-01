@@ -72,7 +72,7 @@ app.frame("/", (c) => {
             width="192"
             overflow="hidden"
           >
-            <Image width="192" height="160" src="/img1.png" />
+            <Image width="192" height="160" src="/public/img1.png" />
           </Box>
         </HStack>
       </Box>
