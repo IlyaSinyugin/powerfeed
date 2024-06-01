@@ -2,6 +2,7 @@ import { Button, Frog } from "frog";
 import { devtools } from "frog/dev";
 import { getFrameMetadata } from "frog/next";
 import type { Metadata } from "next";
+import { sql } from '@vercel/postgres';
 import { serveStatic } from "frog/serve-static";
 import { neynar, type NeynarVariables } from "frog/middlewares";
 // import { neynar } from 'frog/hubs'
@@ -98,12 +99,32 @@ app.frame("/", neynarMiddleware, async (c) => {
 app.frame("/score/:id", neynarMiddleware, async (c) => {
   const hash = c.req.param("id");
 
-  //const { username, pfpUrl, fid } = c.var.interactor || {};
-  //const scoreData = await fetchPowerScore(fid?.toString());
-  //let score = scoreData?.data.rows[0]?.power_score || 1;
-  let score = 1;
-  if (score < 0) {
-    score = 1;
+  // check if hash exists in the db
+  const existingData = await sql`
+    SELECT username, pfpurl, fid, score
+    FROM user_scores
+    WHERE hash = ${hash}
+  `;
+
+  let username, pfpUrl, fid, score;
+
+  if (existingData.rows.length > 0) {
+    // If the hash exists, retrieve the data
+    ({ username, pfpurl: pfpUrl, fid, score } = existingData.rows[0]);
+  } else {
+    // If the hash does not exist, fetch the data from the external source
+    const { username, pfpUrl, fid } = c.var.interactor || {};
+    const scoreData = await fetchPowerScore(fid?.toString());
+    score = scoreData?.data.rows[0]?.power_score || 1;
+    if (score < 0) {
+      score = 1;
+    }
+
+    // Insert the new data into the database
+    await sql`
+      INSERT INTO user_scores (username, pfpurl, fid, score, hash)
+      VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
+    `;
   }
   const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
@@ -123,8 +144,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         >
           <HStack gap="18" alignHorizontal="center" alignVertical="center">
             <img
-              src="https://imgur.com/WImxm1D.jpeg"
-              //src={pfpUrl}
+              //src="https://imgur.com/WImxm1D.jpeg"
+              src={pfpUrl}
               width="128"
               height="128"
               style={{
@@ -140,8 +161,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                 weight="800"
                 wrap="balance"
               >
-                {/*username*/}
-                test
+                {username}
               </Text>
               <Text color="green" size="18" decoration="solid" weight="800">
                 got the power!
