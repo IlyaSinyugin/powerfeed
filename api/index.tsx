@@ -1,14 +1,15 @@
-import { Button, Frog, TextInput } from "frog";
+import { Button, Frog } from "frog";
 import { devtools } from "frog/dev";
+import { getFrameMetadata } from 'frog/next';
+import type { Metadata } from 'next';
 import { serveStatic } from "frog/serve-static";
+import { neynar, type NeynarVariables } from 'frog/middlewares'
 // import { neynar } from 'frog/hubs'
 import { handle } from "frog/vercel";
+import { fetchPowerUsers, fetchPowerScore } from "./helpers.js";
 import {
-  Column,
-  Columns,
   Row,
   Rows,
-  Heading,
   Text,
   vars,
   Box,
@@ -41,10 +42,23 @@ export const app = new Frog({
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
 });
 
-app.frame("/", (c) => {
-  const { buttonValue, inputText, status } = c;
+export async function generateMetadata(): Promise<Metadata> {
+  const url = process.env.VERCEL_URL || 'http://localhost:5173'
+  const frameMetadata = await getFrameMetadata(`${url}/api`)
+  return {
+    other: frameMetadata,
+  }
+}
+
+const neynarMiddleware = neynar({
+  apiKey: 'NEYNAR_FROG_FM',
+  features: ['interactor', 'cast'],
+})
+
+app.frame("/", neynarMiddleware, (c) => {
+  const { fid } = c.var.interactor || {};
   return c.res({
-    action: "/score",
+    action: `/score/${fid}`,
     image: (
       <Box
         grow
@@ -81,16 +95,18 @@ app.frame("/", (c) => {
   });
 });
 
-app.frame("/score", (c) => {
-  const { buttonValue, inputText, status } = c;
+app.frame("/score/:id", neynarMiddleware, async (c) => {
+  const { username, fid, pfpUrl } = c.var.interactor || {};
+  const scoreData = await fetchPowerScore(fid?.toString());
+  let score = scoreData?.data.rows[0]?.power_score || 1;
+  if (score < 0) {
+    score = 1;
+  };  
+  const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${fid}`;
+
   return c.res({
-    action: "/score",
+    action: `/score/${fid}`,
     image: (
-      // 1 divider at the top and 1 at the bottom
-      // in the middle on the left side image of the interacted user, name and below that text
-      // which says "got the power!". On the right side to that the power score is displayed as
-      // "Power Score: 100"
-      // below the divider there is text "Use your Power Score" to give and earn $power to cool casts! Check /powerfeed for more
       <Rows gap="1" grow>
         <Row backgroundColor="background" height="2/7" />
         <Divider color="green" />
@@ -103,7 +119,8 @@ app.frame("/score", (c) => {
         >
           <HStack gap="18" alignHorizontal="center" alignVertical="center">
             <img
-              src="https://imgur.com/WImxm1D.jpeg"
+             //src="https://imgur.com/WImxm1D.jpeg"
+              src={pfpUrl}
               width="128"
               height="128"
               style={{
@@ -119,7 +136,8 @@ app.frame("/score", (c) => {
                 weight="800"
                 wrap="balance"
               >
-                Michael Pfister
+                {username}
+                
               </Text>
               <Text color="green" size="18" decoration="solid" weight="800">
                 got the power!
@@ -138,7 +156,7 @@ app.frame("/score", (c) => {
               flexWrap="nowrap"
               display="flex"
             >
-              Power Score: {23}
+              Power Score: {score}
             </Box>
           </HStack>
         </Row>
@@ -153,13 +171,16 @@ app.frame("/score", (c) => {
           textAlign="center"
         >
           <Text color="white" size="20" decoration="solid" weight="800">
-            Use your Power Score to earn and give $power to cool casts! Check
-            /powerfeed for more
+          Power Score = power users engaged with your casts last week. Use it to earn and give $power to cool casts in /powerfeed!
           </Text>
         </Row>
       </Rows>
     ),
-    intents: [<Button value="checkScore">Test</Button>],
+    intents: [
+    <Button.Link href={shareUrl}>Share</Button.Link>,
+    <Button value="checkScore">Check your score</Button>,
+    <Button.Link href="https://warpcast.com/~/channel/powerfeed">Join the game</Button.Link>
+  ],
   });
 });
 // @ts-ignore

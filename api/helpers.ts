@@ -1,18 +1,20 @@
 import fs from 'fs';
 import dotenv from 'dotenv';
+import path from 'path';
+import powerUsersFids from './powerUsersFids.json';
 
 // import it outside of api folder
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: path.join(process.cwd(), './.env') });
 
 // fetch all powerusers from Neynar 
 async function fetchPowerUsers() {
-    const NEYNAR_API_KEY = 'NEYNAR_API_DOCS';
+    const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || 'NEYNAR_API_DOCS';
     let powerUsers: any[] = [];
     let powerUsersFids: any[] = [];
     let nextCursor = '';
     let hasMore = true;
 
-    const delay = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const options = {
         method: 'GET',
@@ -29,8 +31,7 @@ async function fetchPowerUsers() {
             const response = await fetch(url, options);
             const data = await response.json();
             powerUsers = powerUsers.concat(data.users);
-            console.log(`data is ${JSON.stringify(data)}`)
-            if (data.next.cursor) {
+            if (data.next && data.next.cursor) {
                 nextCursor = data.next.cursor;
             } else {
                 hasMore = false;
@@ -43,23 +44,30 @@ async function fetchPowerUsers() {
         await delay(5000);
     }
 
-    // put fid of each power user in an array
+    // Extract FIDs and save them to a JSON file
     powerUsers.forEach((user) => {
         powerUsersFids.push(user['fid']);
     });
 
+    // Save to a JSON file in the current directory
+    fs.writeFileSync('powerUsersFids.json', JSON.stringify(powerUsersFids, null, 2));
+    console.log('Power user FIDs saved to powerUsersFids.json');
+
     return powerUsersFids;
 }
-
 // // fetch the power score for a given power user
 async function fetchPowerScore(fid: any) {
     const REDASH_API = process.env.REDASH_API;
     const url = `https://data.hubs.neynar.com/api/queries/666/results`;
     // load all of fids from powerUsers.txt into a string separated by commas
-    const powerUsers = fs.readFileSync('powerUsers.txt', 'utf8'); // TODO: fetch from database later on
+    //const powerUsers = fs.readFileSync('/api/powerUsers.txt', 'utf8'); // TODO: fetch from database later on
+    
+    // get powerusers from powerUsersFids.json
+    const powerUsers = powerUsersFids.join(',');
+    //console.log(`Power users: ${powerUsers}`)
     const fids = powerUsers.split('\n').join(',');
     const payload = {
-        'max_age': 1800, // response from request lives 5 hours for now
+        'max_age': 18000, // response from request lives 5 hours for now
         'parameters': {
             'fid': fid,
             'power_user_fids': fids,
@@ -74,13 +82,12 @@ async function fetchPowerScore(fid: any) {
         body: JSON.stringify(payload),
     };
     try {
+        console.log(`Fetching power score for ${fid}...`)
         let response = await fetch(url, options);
         let data = await response.json();
         if ('job' in data) {
-            console.log(`data is ${JSON.stringify(data)}`)
             while (data.job.status < 3) {
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                console.log('Waiting for power score...')
                 response = await fetch(url, options);
                 data = await response.json();
                 if ('query_result' in data) {
@@ -95,12 +102,5 @@ async function fetchPowerScore(fid: any) {
         return null;
     }
 }
-
-
-// // fetch the power score of fid 429107
-const result = await fetchPowerScore('429107');
-
-// // log the power score
-console.log(`Power score: ${JSON.stringify(result)}`);
 
 export { fetchPowerUsers, fetchPowerScore };
