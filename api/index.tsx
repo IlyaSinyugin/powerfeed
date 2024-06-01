@@ -241,8 +241,7 @@ app.frame('/gamerules', neynarMiddleware, async (c) => {
       //imageAspectRatio: "1.91:1",
       intents: [
         <Button.Link href="https://warpcast.com/~/channel/powerfeed">/powerfeed</Button.Link>,
-        <Button value="zaglushka">Leaderboard (soon)</Button>,
-        <Button value="backbutton" action={`/score/${hash}`}>Back</Button>
+        <Button value="zaglushka" action="/soon">Leaderboard (soon)</Button>,
       ]
     });
   } else {
@@ -252,13 +251,45 @@ app.frame('/gamerules', neynarMiddleware, async (c) => {
       //imageAspectRatio: "1.91:1",
       intents: [
         <Button.Link href="https://warpcast.com/~/channel/powerfeed">/powerfeed</Button.Link>,
-        <Button value="zaglushka">Leaderboard (soon)</Button>,
-        <Button value="backbutton" action={`/`}>Back</Button>
+        <Button value="zaglushka" action="/soon">Leaderboard (soon)</Button>,
       ]
     });
   }
+});
 
+// new frame called soon with image - https://i.imgur.com/wDggw1i.png and button Back that takes back to /score
+app.frame('/soon', neynarMiddleware, async (c) => {
+  // get the fid, username of the interactor 
+  const { fid, username } = c.var.interactor || {};
 
+  // get the hash of the interactor from the db
+  const hashData = await sql`
+    SELECT hash
+    FROM user_scores
+    WHERE fid = ${fid}
+  `;
+  let hash;
+
+  if (hashData.rows.length > 0) {
+    hash = hashData.rows[0].hash;
+    return c.res({
+      action: "/soon",
+      image: "https://i.imgur.com/wDggw1i.png",
+      //imageAspectRatio: "1.91:1",
+      intents: [
+        <Button value="backbutton" action={`/score/${hash}`}>Back</Button>
+      ]
+    });
+  } else {
+    return c.res({
+      action: "/soon",
+      image: "https://i.imgur.com/wDggw1i.png",
+      //imageAspectRatio: "1.91:1",
+      intents: [
+        <Button value="backbutton" action="/">Back</Button>
+      ]
+    });
+  }
 });
 
 // @ts-ignore
