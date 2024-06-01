@@ -13,24 +13,25 @@ export const {
   Text,
   VStack,
   vars,
+  Divider
 } = createSystem({
   colors: {
     background: '#1F1629',
     white: '#FFFFFF',
     green: '#B1FC5A'
   },
-//   fonts: {
-//     default: [
-//       {
-//         name: 'EB Garamond',
-//         source: 'google',
-//         weight: 900,
-//       },
-//       {
-//         name: 'EB Garamond',
-//         source: 'google',
-//         weight: 400,
-//       },
-//     ],
-//   },
+  fonts: {
+    default: [
+      {
+        name: 'JetBrains Mono',
+        source: 'google',
+        weight: 800,
+      },
+      {
+        name: 'JetBrains Mono',
+        source: 'google',
+        weight: 400,
+      },
+    ],
+  },
 });
