@@ -135,10 +135,10 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     `;
     }
   }
-  const shareUrl = `https://warpcast.com/~/compose?text=Hello%2520world!&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
-
+  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+// Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️
   console.log(`Username: ${username}, FID: ${fid}, Score: ${score}`);
-  
+
   return c.res({
     image: (
       <Rows gap="1" grow>
@@ -220,17 +220,45 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
 });
 
 
-app.frame('/gamerules', (c) => {
+app.frame('/gamerules', neynarMiddleware, async (c) => {
   console.log("Game Rules");
-  return c.res({
-    action: "/gamerules",
-    image: "https://i.imgur.com/hxX85GY.png",
-    //imageAspectRatio: "1.91:1",
-    intents: [
-      <Button.Link href="https://warpcast.com/~/channel/powerfeed">go to /powerfeed</Button.Link>,
-      <Button value="zaglushka">Leaderbord (soon)</Button>
-    ]
-  })
+  // get the fid, username of the interactor 
+  const { fid, username } = c.var.interactor || {};
+
+  // get the hash of the interactor from the db
+  const hashData = await sql`
+    SELECT hash
+    FROM user_scores
+    WHERE fid = ${fid}
+  `;
+  let hash;
+
+  if (hashData.rows.length > 0) {
+    hash = hashData.rows[0].hash;
+    return c.res({
+      action: "/gamerules",
+      image: "https://i.imgur.com/hxX85GY.png",
+      //imageAspectRatio: "1.91:1",
+      intents: [
+        <Button.Link href="https://warpcast.com/~/channel/powerfeed">go to /powerfeed</Button.Link>,
+        <Button value="zaglushka">Leaderbord (soon)</Button>,
+        <Button value="backbutton" action={`/score/${hash}`}>Back</Button>
+      ]
+    });
+  } else {
+    return c.res({
+      action: "/gamerules",
+      image: "https://i.imgur.com/hxX85GY.png",
+      //imageAspectRatio: "1.91:1",
+      intents: [
+        <Button.Link href="https://warpcast.com/~/channel/powerfeed">go to /powerfeed</Button.Link>,
+        <Button value="zaglushka">Leaderboard (soon)</Button>,
+        <Button value="backbutton" action={`/`}>Back</Button>
+      ]
+    });
+  }
+
+
 });
 
 // @ts-ignore
