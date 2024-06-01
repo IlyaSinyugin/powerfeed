@@ -333,7 +333,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     WHERE hash = ${hash}
   `;
 
-  console.log(`Database lookup for hash ${hash} returned ${existingData.rows.length} rows and interactor ${c.var.interactor}`)
+  console.log(`Database lookup for hash ${hash} returned ${existingData.rows.length} rows and interactor ${JSON.stringify(c.var.interactor)}`)
 
   let username, pfpUrl, fid: any, score;
 
