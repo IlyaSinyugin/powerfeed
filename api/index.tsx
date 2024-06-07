@@ -41,6 +41,7 @@ export const app = new Frog({
         source: "google",
       },
     ],
+    format: 'png',
     headers: { "Cache-Control": "max-age=3200" },
   },
   // Supply a Hub to enable frame verification.
