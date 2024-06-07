@@ -964,19 +964,14 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             <Rows gap="1" grow>
               <Row
                 backgroundColor="background"
-                height="2/7"
-                alignContent="center"
-                alignItems="center"
+                height="2/5"
                 paddingTop="32"
               >
-                <Text color="green" size="24" decoration="solid" weight="800">
-                  Powergame Stats
-                </Text>
               </Row>
               <Divider color="green" />
               <Row
                 backgroundColor="background"
-                height="3/7"
+                height="3/5"
                 alignHorizontal="left"
                 alignVertical="center"
                 padding="16"
@@ -1016,11 +1011,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                   </VStack>
                   <Spacer size="72" />
                   <Box
-                    fontSize="18"
-                    color="white"
-                    fontStyle="JetBrains Mono"
-                    fontFamily="default"
-                    fontWeight="800"
                     alignContent="center"
                     alignVertical="center"
                     paddingBottom="14"
@@ -1056,20 +1046,14 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 </HStack>
               </Row>
               <Divider color="green" />
-              <Row
-                backgroundColor="background"
-                height="3/7"
-                alignHorizontal="right"
-                paddingLeft="1"
-                paddingRight="1"
-                paddingTop="22"
-                textAlign="center"
-              >
-                <Text color="white" size="20" decoration="solid" weight="800">
+                {/* <Text color="white" size="20" decoration="solid" weight="800">
                   Each ⚡️ sent has points = (sender's Power Score)*10 splitting
                   50/50 between sender and receiver
-                </Text>
-              </Row>
+                </Text> */}
+                <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
+                  Each ⚡️ sent has points = (sender's Power Score)*10 splitting
+                  50/50 between sender and receiver
+                </Box>
             </Rows>
           ),
           intents: [
@@ -1094,19 +1078,16 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             <Rows gap="1" grow>
               <Row
                 backgroundColor="background"
-                height="2/7"
+                height="2/5"
                 alignContent="center"
                 alignItems="center"
                 paddingTop="32"
               >
-                <Text color="green" size="24" decoration="solid" weight="800">
-                  Powergame Stats
-                </Text>
               </Row>
               <Divider color="green" />
               <Row
                 backgroundColor="background"
-                height="3/7"
+                height="3/5"
                 alignHorizontal="left"
                 alignVertical="center"
                 padding="16"
@@ -1146,11 +1127,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                   </VStack>
                   <Spacer size="72" />
                   <Box
-                    fontSize="18"
-                    color="white"
-                    fontStyle="JetBrains Mono"
-                    fontFamily="default"
-                    fontWeight="800"
                     alignContent="center"
                     alignVertical="center"
                     paddingBottom="14"
@@ -1186,20 +1162,14 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 </HStack>
               </Row>
               <Divider color="green" />
-              <Row
-                backgroundColor="background"
-                height="3/7"
-                alignHorizontal="right"
-                paddingLeft="1"
-                paddingRight="1"
-                paddingTop="22"
-                textAlign="center"
-              >
-                <Text color="white" size="20" decoration="solid" weight="800">
+                {/* <Text color="white" size="20" decoration="solid" weight="800">
                   Each ⚡️ sent has points = (sender's Power Score)*10 splitting
                   50/50 between sender and receiver
-                </Text>
-              </Row>
+                </Text> */}
+                <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
+                  Each ⚡️ sent has points = (sender's Power Score)*10 splitting
+                  50/50 between sender and receiver
+                </Box>
             </Rows>
           ),
           intents: [
@@ -1252,7 +1222,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
         <Rows gap="1" grow>
           <Row
             backgroundColor="background"
-            height="2/7"
+            height="2/5"
             alignContent="center"
             alignItems="center"
             paddingTop="32"
@@ -1264,12 +1234,16 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           <Divider color="green" />
           <Row
             backgroundColor="background"
-            height="3/7"
+            height="3/5"
             alignHorizontal="left"
             alignVertical="center"
             padding="16"
           >
-            <HStack gap="18" alignHorizontal="center" alignVertical="center">
+            <HStack
+              gap="18"
+              alignHorizontal="center"
+              alignVertical="center"
+            >
               <img
                 src={pfpUrl}
                 width="128"
@@ -1289,17 +1263,18 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 >
                   {username}
                 </Text>
-                <Text color="green" size="18" decoration="solid" weight="800">
+                <Text
+                  color="green"
+                  size="18"
+                  decoration="solid"
+                  weight="800"
+                >
                   got the power!
                 </Text>
               </VStack>
               <Spacer size="72" />
               <Box
                 fontSize="18"
-                color="white"
-                fontStyle="JetBrains Mono"
-                fontFamily="default"
-                fontWeight="800"
                 alignContent="center"
                 alignVertical="center"
                 paddingBottom="14"
@@ -1315,30 +1290,34 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 >
                   ⚡️sent/received: {reactionsSent}/{reactionsReceived}
                 </Text>
-                <Text color="white" size="18" decoration="solid" weight="800">
+                <Text
+                  color="white"
+                  size="18"
+                  decoration="solid"
+                  weight="800"
+                >
                   💰points earned: {points}
                 </Text>
-                <Text color="white" size="18" decoration="solid" weight="800">
+                <Text
+                  color="white"
+                  size="18"
+                  decoration="solid"
+                  weight="800"
+                >
                   🏆power rank: {rank}
                 </Text>
               </Box>
             </HStack>
           </Row>
           <Divider color="green" />
-          <Row
-            backgroundColor="background"
-            height="3/7"
-            alignHorizontal="right"
-            paddingLeft="1"
-            paddingRight="1"
-            paddingTop="22"
-            textAlign="center"
-          >
-            <Text color="white" size="20" decoration="solid" weight="800">
+            {/* <Text color="white" size="20" decoration="solid" weight="800">
               Each ⚡️ sent has points = (sender's Power Score)*10 splitting
               50/50 between sender and receiver
-            </Text>
-          </Row>
+            </Text> */}
+            <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
+              Each ⚡️ sent has points = (sender's Power Score)*10 splitting
+              50/50 between sender and receiver
+            </Box>
         </Rows>
       ),
       intents: [
@@ -1371,7 +1350,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
       <Rows gap="1" grow>
         <Row
           backgroundColor="background"
-          height="2/7"
+          height="2/5"
           alignContent="center"
           alignItems="center"
           paddingTop="32"
@@ -1383,14 +1362,17 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
         <Divider color="green" />
         <Row
           backgroundColor="background"
-          height="3/7"
+          height="3/5"
           alignHorizontal="left"
           alignVertical="center"
           padding="16"
         >
-          <HStack gap="18" alignHorizontal="center" alignVertical="center">
+          <HStack
+            gap="18"
+            alignHorizontal="center"
+            alignVertical="center"
+          >
             <img
-              //src="https://imgur.com/WImxm1D.jpeg"
               src={pfpUrl}
               width="128"
               height="128"
@@ -1409,17 +1391,19 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               >
                 {username}
               </Text>
-              <Text color="green" size="18" decoration="solid" weight="800">
+              <Text
+                color="green"
+                size="18"
+                decoration="solid"
+                weight="800"
+              >
                 got the power!
               </Text>
             </VStack>
             <Spacer size="72" />
             <Box
               fontSize="18"
-              color="white"
-              fontStyle="JetBrains Mono"
               fontFamily="default"
-              fontWeight="800"
               alignContent="center"
               alignVertical="center"
               paddingBottom="14"
@@ -1435,30 +1419,34 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               >
                 ⚡️sent/received: {reactionsSent}/{reactionsReceived}
               </Text>
-              <Text color="white" size="18" decoration="solid" weight="800">
+              <Text
+                color="white"
+                size="18"
+                decoration="solid"
+                weight="800"
+              >
                 💰points earned: {points}
               </Text>
-              <Text color="white" size="18" decoration="solid" weight="800">
+              <Text
+                color="white"
+                size="18"
+                decoration="solid"
+                weight="800"
+              >
                 🏆power rank: {rank}
               </Text>
             </Box>
           </HStack>
         </Row>
         <Divider color="green" />
-        <Row
-          backgroundColor="background"
-          height="3/7"
-          alignHorizontal="right"
-          paddingLeft="1"
-          paddingRight="1"
-          paddingTop="22"
-          textAlign="center"
-        >
-          <Text color="white" size="20" decoration="solid" weight="800">
-            Each ⚡️ sent has points = (sender's Power Score)*10 splitting 50/50
-            between sender and receiver
-          </Text>
-        </Row>
+          {/* <Text color="white" size="20" decoration="solid" weight="800">
+            Each ⚡️ sent has points = (sender's Power Score)*10 splitting
+            50/50 between sender and receiver
+          </Text> */}
+          <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
+            Each ⚡️ sent has points = (sender's Power Score)*10 splitting
+            50/50 between sender and receiver
+          </Box>
       </Rows>
     ),
     intents: [
