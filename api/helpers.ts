@@ -111,4 +111,9 @@ async function fetchPowerScore(fid: any) {
     }
 }
 
+// fetchPowerUsers - call this function 
+// fetchPowerUsers().then(() => {
+//     console.log('Power users fetched successfully');
+// });
+
 export { fetchPowerUsers, fetchPowerScore };
