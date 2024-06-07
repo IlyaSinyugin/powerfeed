@@ -617,7 +617,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
         <Button value="score" action={`/score/${hashScore}`}>
           Score
         </Button>,
-        <Button>Stats</Button>,
+        <Button action='/soon'>Stats</Button>,
       ],
     });
   } else {
