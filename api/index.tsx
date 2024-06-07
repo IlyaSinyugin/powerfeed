@@ -363,7 +363,6 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         // set score
         score = existingFid.rows[0].score;
         hash = existingFid.rows[0].hash;
-        pfpUrl = existingFid.rows[0].pfpurl;
         console.log(
           `Existing data: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, hash: ${hash}`
         );
@@ -659,7 +658,6 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       // set score
       score = existingFid.rows[0].score;
       hash = existingFid.rows[0].hash;
-      pfpUrl = existingFid.rows[0].pfpurl;
     } else {
       let scoreData: any;
       const fetchScore = async () => {
@@ -954,7 +952,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
         reactionsReceived = existingFid.rows[0].reactions_received.toString();
         rank = existingFid.rows[0].rank.toString();
         hash = existingFid.rows[0].hash;
-        pfpUrl = existingFid.rows[0].pfpurl;
         console.log(
           `Existing data: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, points: ${points}, hash: ${hash}`
         );
