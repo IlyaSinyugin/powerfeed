@@ -702,6 +702,13 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
 
   console.log(`check`);
 
+  // get the total count of the rows in user_points to set lastRank 
+  const totalRows = await sql`
+    SELECT COUNT(*)
+    FROM user_points
+  `;
+  let lastRank = totalRows.rows[0].count;
+
   if (c.var.interactor?.fid && pointsData.rows.length > 0) {
     hash = pointsData?.rows[0].hash;
     if (c.var.interactor.fid === pointsData.rows[0].fid) {
@@ -833,7 +840,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
         reactionsSent = "0";
         reactionsReceived = "0";
         points = "0";
-        rank = "0";
+        rank = lastRank.toString();
         // don't put share button here
         return c.res({
           image: (
@@ -963,7 +970,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
     reactionsSent = "0";
     reactionsReceived = "0";
     points = "0";
-    rank = "0";
+    rank = lastRank.toString();
     // don't put share button here
     return c.res({
       image: (
@@ -1066,7 +1073,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
   reactionsSent = reactionsSent?.toString() || "0";
   reactionsReceived = reactionsReceived?.toString() || "0";
   points = points?.toString() || "0";
-  rank = rank?.toString() || "0";
+  rank = rank?.toString() || lastRank.toString();
   console.log(`Username: ${username}, FID: ${fid}, Points: ${points}`);
 
   let scoreData = await sql`
