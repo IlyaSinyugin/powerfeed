@@ -138,9 +138,15 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         console.log(`The fid ${fid} is already in the table`);
         // set score
         score = existingFid.rows[0].score;
-        hash = existingFid.rows[0].hash;
+        hash = await generateRandomHash();
+        // update the hash in the database
+        await sql`
+          UPDATE user_scores
+          SET hash = ${hash}
+          WHERE fid = ${fid}
+        `;
         console.log(
-          `Existing data: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, hash: ${hash}`
+          `Existing data & generated hash: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, hash: ${hash}`
         );
         const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
         return c.res({
@@ -433,7 +439,15 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     if (existingFid.rows.length > 0) {
       // set score
       score = existingFid.rows[0].score;
-      hash = existingFid.rows[0].hash;
+      // regenerate hash to a new one 
+      hash = await generateRandomHash();
+      // update the hash in the database
+      await sql`
+        UPDATE user_scores
+        SET hash = ${hash}
+        WHERE fid = ${fid}
+      `;
+      //hash = existingFid.rows[0].hash;
     } else {
       let scoreData: any;
       const fetchScore = async () => {
