@@ -226,7 +226,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           intents: [
             <Button.Link href={shareUrl}>Share</Button.Link>,
             <Button action={`/`} value="checkScore">
-              Score
+              Refresh
             </Button>,
             <Button action="/gamerules" value="joinGame">
               Play
@@ -397,7 +397,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           intents: [
             <Button.Link href={shareUrl}>Share</Button.Link>,
             <Button action={`/`} value="checkScore">
-              Score
+              Refresh
             </Button>,
             <Button action="/gamerules" value="joinGame">
               Play
@@ -571,7 +571,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     intents: [
       <Button.Link href={shareUrl}>Share</Button.Link>,
       <Button action={`/`} value="checkScore">
-        Score
+        Refresh
       </Button>,
       <Button action="/gamerules" value="joinGame">
         Play
@@ -617,7 +617,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
         <Button value="score" action={`/score/${hashScore}`}>
           Score
         </Button>,
-        <Button action='/soon'>Stats</Button>,
+        <Button action={`/stats/${hash}`}>Stats</Button>,
       ],
     });
   } else {
@@ -632,8 +632,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
         <Button value="score" action={`/score/${hashScore}`}>
           Score
         </Button>,
-        //<Button value="points" action={`/stats/${randomHash}`}>
-        <Button value="points" action="/soon">
+        <Button value="points" action={`/stats/${randomHash}`}>
           Stats
         </Button>,
       ],
@@ -769,7 +768,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     <Text
                       color="white"
                       size="18"
-                      decoration="solid"
                       weight="800"
                       wrap="balance"
                     >
@@ -778,7 +776,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     <Text
                       color="green"
                       size="18"
-                      decoration="solid"
                       weight="800"
                     >
                       got the power!
@@ -795,8 +792,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     <Text
                       color="white"
                       size="18"
-                      decoration="solid"
-                      weight="800"
                       wrap="balance"
                     >
                       ⚡️sent/received: {reactionsSent}/{reactionsReceived}
@@ -804,16 +799,12 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     <Text
                       color="white"
                       size="18"
-                      decoration="solid"
-                      weight="800"
                     >
                       💰points earned: {points}
                     </Text>
                     <Text
                       color="white"
                       size="18"
-                      decoration="solid"
-                      weight="800"
                     >
                       🏆power rank: {rank}
                     </Text>
@@ -821,10 +812,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 </HStack>
               </Row>
               <Divider color="green" />
-                {/* <Text color="white" size="20" decoration="solid" weight="800">
-                  Each ⚡️ sent has points = (sender's Power Score)*10 splitting
-                  50/50 between sender and receiver
-                </Text> */}
                 <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
                   Each ⚡️ sent has points = (sender's Power Score)*10 splitting
                   50/50 between sender and receiver
@@ -854,8 +841,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               <Row
                 backgroundColor="background"
                 height="2/5"
-                alignContent="center"
-                alignItems="center"
                 paddingTop="32"
               >
               </Row>
@@ -885,7 +870,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     <Text
                       color="white"
                       size="18"
-                      decoration="solid"
                       weight="800"
                       wrap="balance"
                     >
@@ -894,7 +878,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     <Text
                       color="green"
                       size="18"
-                      decoration="solid"
                       weight="800"
                     >
                       got the power!
@@ -911,8 +894,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     <Text
                       color="white"
                       size="18"
-                      decoration="solid"
-                      weight="800"
                       wrap="balance"
                     >
                       ⚡️sent/received: {reactionsSent}/{reactionsReceived}
@@ -920,16 +901,12 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     <Text
                       color="white"
                       size="18"
-                      decoration="solid"
-                      weight="800"
                     >
                       💰points earned: {points}
                     </Text>
                     <Text
                       color="white"
                       size="18"
-                      decoration="solid"
-                      weight="800"
                     >
                       🏆power rank: {rank}
                     </Text>
@@ -937,10 +914,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 </HStack>
               </Row>
               <Divider color="green" />
-                {/* <Text color="white" size="20" decoration="solid" weight="800">
-                  Each ⚡️ sent has points = (sender's Power Score)*10 splitting
-                  50/50 between sender and receiver
-                </Text> */}
                 <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
                   Each ⚡️ sent has points = (sender's Power Score)*10 splitting
                   50/50 between sender and receiver
@@ -998,13 +971,8 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           <Row
             backgroundColor="background"
             height="2/5"
-            alignContent="center"
-            alignItems="center"
             paddingTop="32"
           >
-            <Text color="green" size="24" decoration="solid" weight="800">
-              Powergame Stats
-            </Text>
           </Row>
           <Divider color="green" />
           <Row
@@ -1032,7 +1000,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 <Text
                   color="white"
                   size="18"
-                  decoration="solid"
                   weight="800"
                   wrap="balance"
                 >
@@ -1041,7 +1008,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 <Text
                   color="green"
                   size="18"
-                  decoration="solid"
                   weight="800"
                 >
                   got the power!
@@ -1049,7 +1015,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               </VStack>
               <Spacer size="72" />
               <Box
-                fontSize="18"
                 alignContent="center"
                 alignVertical="center"
                 paddingBottom="14"
@@ -1059,8 +1024,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 <Text
                   color="white"
                   size="18"
-                  decoration="solid"
-                  weight="800"
                   wrap="balance"
                 >
                   ⚡️sent/received: {reactionsSent}/{reactionsReceived}
@@ -1068,16 +1031,12 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 <Text
                   color="white"
                   size="18"
-                  decoration="solid"
-                  weight="800"
                 >
                   💰points earned: {points}
                 </Text>
                 <Text
                   color="white"
                   size="18"
-                  decoration="solid"
-                  weight="800"
                 >
                   🏆power rank: {rank}
                 </Text>
@@ -1085,10 +1044,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             </HStack>
           </Row>
           <Divider color="green" />
-            {/* <Text color="white" size="20" decoration="solid" weight="800">
-              Each ⚡️ sent has points = (sender's Power Score)*10 splitting
-              50/50 between sender and receiver
-            </Text> */}
             <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
               Each ⚡️ sent has points = (sender's Power Score)*10 splitting
               50/50 between sender and receiver
@@ -1126,13 +1081,8 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
         <Row
           backgroundColor="background"
           height="2/5"
-          alignContent="center"
-          alignItems="center"
           paddingTop="32"
         >
-          <Text color="green" size="24" decoration="solid" weight="800">
-            Powergame Stats
-          </Text>
         </Row>
         <Divider color="green" />
         <Row
@@ -1160,7 +1110,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               <Text
                 color="white"
                 size="18"
-                decoration="solid"
                 weight="800"
                 wrap="balance"
               >
@@ -1169,7 +1118,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               <Text
                 color="green"
                 size="18"
-                decoration="solid"
                 weight="800"
               >
                 got the power!
@@ -1177,8 +1125,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             </VStack>
             <Spacer size="72" />
             <Box
-              fontSize="18"
-              fontFamily="default"
               alignContent="center"
               alignVertical="center"
               paddingBottom="14"
@@ -1188,8 +1134,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               <Text
                 color="white"
                 size="18"
-                decoration="solid"
-                weight="800"
                 wrap="balance"
               >
                 ⚡️sent/received: {reactionsSent}/{reactionsReceived}
@@ -1197,16 +1141,12 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               <Text
                 color="white"
                 size="18"
-                decoration="solid"
-                weight="800"
               >
                 💰points earned: {points}
               </Text>
               <Text
                 color="white"
                 size="18"
-                decoration="solid"
-                weight="800"
               >
                 🏆power rank: {rank}
               </Text>
@@ -1214,10 +1154,6 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           </HStack>
         </Row>
         <Divider color="green" />
-          {/* <Text color="white" size="20" decoration="solid" weight="800">
-            Each ⚡️ sent has points = (sender's Power Score)*10 splitting
-            50/50 between sender and receiver
-          </Text> */}
           <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
             Each ⚡️ sent has points = (sender's Power Score)*10 splitting
             50/50 between sender and receiver
