@@ -409,7 +409,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   }
 
   console.log(
-    `Database lookup for hash ${hash} returned ${
+    `Database lookup (user_scores) for hash ${hash} returned ${
       existingData.rows.length
     } rows and interactor ${JSON.stringify(c.var.interactor)}`
   );
@@ -927,7 +927,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
   }
 
   console.log(
-    `Database lookup for hash ${hash} returned ${
+    `Database lookup (user_points) for hash ${hash} returned ${
       pointsData.rows.length
     } rows and interactor ${JSON.stringify(c.var.interactor)}`
   );
@@ -953,12 +953,28 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
   } else {
     // no data in the db for this user yet, can't check score TODO: do some kind of fallback for now
     ({ username, pfpUrl, fid } = c.var.interactor || {});
-    console.log(`Hash doesn't exist with username ${username} and fid ${fid}`);
+    console.log(`Hash doesn't exist with username ${username} and fid ${fid}. Attempting to fetch based on fid.`);
+
+    // attempt to fetch the data based on fid instead 
+    const existingFid = await sql`
+      SELECT fid, points, username, pfpurl, reactions_sent, reactions_received, rank, hash
+      FROM user_points
+      WHERE fid = ${fid}
+    `;
+
+    console.log(`Data fetched based on fid is ${JSON.stringify(existingFid.rows)}`);
+
+
     // set sent, received, points, rank to 0
-    reactionsSent = "0";
-    reactionsReceived = "0";
-    points = "0";
-    rank = lastRank.toString();
+    reactionsSent = existingFid.rows[0].reactions_sent.toString() || "0";
+    reactionsReceived = existingFid.rows[0].reactions_received.toString() || "0";
+    points = existingFid.rows[0].points.toString() || "0";
+    rank = existingFid.rows[0].rank.toString() || lastRank.toString();
+    if (existingFid.rows.length > 0) {
+      hash = existingFid.rows[0].hash;
+    }
+    const shareUrl = `https://warpcast.com/~/compose?text=Check%20out%20my%20%2Fpowerfeed%20stats%20and%20join%20the%20game%20%E2%80%94%20to%20give%20and%20earn%20%24power%20to%20quality%20content%20on%20Farcaster!%E2%9A%A1%EF%B8%8F&embeds%5B%5D=https://powerfeed.vercel.app/api/stats/${hash}`;
+
     // don't put share button here
     return c.res({
       image: (
@@ -1036,6 +1052,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
         </Rows>
       ),
       intents: [
+        <Button.Link href={shareUrl}>Share</Button.Link>,
         <Button value="checkScore">Refresh</Button>,
         <Button action="/gamerules" value="joinGame">
           Play
