@@ -966,10 +966,10 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
 
 
     // set sent, received, points, rank to 0
-    reactionsSent = existingFid.rows[0].reactions_sent.toString() || "0";
-    reactionsReceived = existingFid.rows[0].reactions_received.toString() || "0";
-    points = existingFid.rows[0].points.toString() || "0";
-    rank = existingFid.rows[0].rank.toString() || lastRank.toString();
+    reactionsSent = existingFid.rows[0]?.reactions_sent.toString() || "0";
+    reactionsReceived = existingFid.rows[0]?.reactions_received.toString() || "0";
+    points = existingFid.rows[0]?.points.toString() || "0";
+    rank = existingFid.rows[0]?.rank.toString() || lastRank.toString();
     if (existingFid.rows.length > 0) {
       hash = existingFid.rows[0].hash;
     }
