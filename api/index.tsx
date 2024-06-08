@@ -955,23 +955,32 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
     ({ username, pfpUrl, fid } = c.var.interactor || {});
     console.log(`Hash doesn't exist with username ${username} and fid ${fid}. Attempting to fetch based on fid.`);
 
+
+    if (c.var.interactor !== undefined) {
     // attempt to fetch the data based on fid instead 
-    const existingFid = await sql`
-      SELECT fid, points, username, pfpurl, reactions_sent, reactions_received, rank, hash
-      FROM user_points
-      WHERE fid = ${fid}
-    `;
+      const existingFid = await sql`
+        SELECT fid, points, username, pfpurl, reactions_sent, reactions_received, rank, hash
+        FROM user_points
+        WHERE fid = ${fid}
+      `;
 
-    console.log(`Data fetched based on fid is ${JSON.stringify(existingFid.rows)}`);
+      console.log(`Data fetched based on fid is ${JSON.stringify(existingFid.rows)}`);
 
 
-    // set sent, received, points, rank to 0
-    reactionsSent = existingFid.rows[0]?.reactions_sent.toString() || "0";
-    reactionsReceived = existingFid.rows[0]?.reactions_received.toString() || "0";
-    points = existingFid.rows[0]?.points.toString() || "0";
-    rank = existingFid.rows[0]?.rank.toString() || lastRank.toString();
-    if (existingFid.rows.length > 0) {
-      hash = existingFid.rows[0].hash;
+      // set sent, received, points, rank to 0
+      reactionsSent = existingFid.rows[0]?.reactions_sent.toString() || "0";
+      reactionsReceived = existingFid.rows[0]?.reactions_received.toString() || "0";
+      points = existingFid.rows[0]?.points.toString() || "0";
+      rank = existingFid.rows[0]?.rank.toString() || lastRank.toString();
+      if (existingFid.rows.length > 0) {
+        hash = existingFid.rows[0].hash;
+      }
+    } else {
+      // set sent, received, points, rank to 0
+      reactionsSent = "0";
+      reactionsReceived = "0";
+      points = "0";
+      rank = lastRank.toString();
     }
     const shareUrl = `https://warpcast.com/~/compose?text=Check%20out%20my%20%2Fpowerfeed%20stats%20and%20join%20the%20game%20%E2%80%94%20to%20give%20and%20earn%20%24power%20to%20quality%20content%20on%20Farcaster!%E2%9A%A1%EF%B8%8F&embeds%5B%5D=https://powerfeed.vercel.app/api/stats/${hash}`;
 
