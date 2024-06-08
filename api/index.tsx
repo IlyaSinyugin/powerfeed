@@ -748,6 +748,9 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 height="2/5"
                 paddingTop="32"
               >
+                          <Text color="green" size="24" decoration="solid" weight="800">
+            Powergame Stats
+          </Text>
               </Row>
               <Divider color="green" />
               <Row
@@ -850,6 +853,9 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 height="2/5"
                 paddingTop="32"
               >
+                          <Text color="green" size="24" decoration="solid" weight="800">
+            Powergame Stats
+          </Text>
               </Row>
               <Divider color="green" />
               <Row
@@ -980,6 +986,9 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             height="2/5"
             paddingTop="32"
           >
+                      <Text color="green" size="24" decoration="solid" weight="800">
+            Powergame Stats
+          </Text>
           </Row>
           <Divider color="green" />
           <Row
@@ -1090,6 +1099,9 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           height="2/5"
           paddingTop="32"
         >
+                    <Text color="green" size="24" decoration="solid" weight="800">
+            Powergame Stats
+          </Text>
         </Row>
         <Divider color="green" />
         <Row
