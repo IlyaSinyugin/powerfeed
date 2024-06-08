@@ -41,7 +41,7 @@ export const app = new Frog({
         source: "google",
       },
     ],
-    format: 'png',
+    format: "png",
     //headers: { "Cache-Control": "max-age=3200" },
   },
   // Supply a Hub to enable frame verification.
@@ -702,7 +702,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
 
   console.log(`check`);
 
-  // get the total count of the rows in user_points to set lastRank 
+  // get the total count of the rows in user_points to set lastRank
   const totalRows = await sql`
     SELECT COUNT(*)
     FROM user_points
@@ -747,10 +747,12 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 backgroundColor="background"
                 height="2/5"
                 paddingTop="32"
+                alignContent="center"
+                alignItems="center"
               >
-                          <Text color="green" size="24" decoration="solid" weight="800">
-            Powergame Stats
-          </Text>
+                <Text color="green" size="24" decoration="solid" weight="800">
+                  Powergame Stats
+                </Text>
               </Row>
               <Divider color="green" />
               <Row
@@ -775,19 +777,10 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     }}
                   />
                   <VStack gap="1">
-                    <Text
-                      color="white"
-                      size="18"
-                      weight="800"
-                      wrap="balance"
-                    >
+                    <Text color="white" size="18" weight="800" wrap="balance">
                       {username}
                     </Text>
-                    <Text
-                      color="green"
-                      size="18"
-                      weight="800"
-                    >
+                    <Text color="green" size="18" weight="800">
                       got the power!
                     </Text>
                   </VStack>
@@ -799,33 +792,31 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     flexWrap="nowrap"
                     display="flex"
                   >
-                    <Text
-                      color="white"
-                      size="18"
-                      wrap="balance"
-                    >
+                    <Text color="white" size="18" wrap="balance">
                       ⚡️sent/received: {reactionsSent}/{reactionsReceived}
                     </Text>
-                    <Text
-                      color="white"
-                      size="18"
-                    >
+                    <Text color="white" size="18">
                       💰points earned: {points}
                     </Text>
-                    <Text
-                      color="white"
-                      size="18"
-                    >
+                    <Text color="white" size="18">
                       🏆power rank: {rank}
                     </Text>
                   </Box>
                 </HStack>
               </Row>
               <Divider color="green" />
-                <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
-                  Each ⚡️ sent has points = (sender's Power Score)*10 splitting
-                  50/50 between sender and receiver
-                </Box>
+              <Box
+                fontSize="20"
+                textAlign="center"
+                fontWeight="800"
+                color="white"
+                backgroundColor="background"
+                paddingTop="36"
+                paddingBottom="30"
+              >
+                Each ⚡️ sent has points = (sender's Power Score)*10 splitting
+                50/50 between sender and receiver
+              </Box>
             </Rows>
           ),
           intents: [
@@ -852,10 +843,12 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 backgroundColor="background"
                 height="2/5"
                 paddingTop="32"
+                alignContent="center"
+                alignItems="center"
               >
-                          <Text color="green" size="24" decoration="solid" weight="800">
-            Powergame Stats
-          </Text>
+                <Text color="green" size="24" decoration="solid" weight="800">
+                  Powergame Stats
+                </Text>
               </Row>
               <Divider color="green" />
               <Row
@@ -880,19 +873,10 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     }}
                   />
                   <VStack gap="1">
-                    <Text
-                      color="white"
-                      size="18"
-                      weight="800"
-                      wrap="balance"
-                    >
+                    <Text color="white" size="18" weight="800" wrap="balance">
                       {username}
                     </Text>
-                    <Text
-                      color="green"
-                      size="18"
-                      weight="800"
-                    >
+                    <Text color="green" size="18" weight="800">
                       got the power!
                     </Text>
                   </VStack>
@@ -904,33 +888,31 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                     flexWrap="nowrap"
                     display="flex"
                   >
-                    <Text
-                      color="white"
-                      size="18"
-                      wrap="balance"
-                    >
+                    <Text color="white" size="18" wrap="balance">
                       ⚡️sent/received: {reactionsSent}/{reactionsReceived}
                     </Text>
-                    <Text
-                      color="white"
-                      size="18"
-                    >
+                    <Text color="white" size="18">
                       💰points earned: {points}
                     </Text>
-                    <Text
-                      color="white"
-                      size="18"
-                    >
+                    <Text color="white" size="18">
                       🏆power rank: {rank}
                     </Text>
                   </Box>
                 </HStack>
               </Row>
               <Divider color="green" />
-                <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
-                  Each ⚡️ sent has points = (sender's Power Score)*10 splitting
-                  50/50 between sender and receiver
-                </Box>
+              <Box
+                fontSize="20"
+                textAlign="center"
+                fontWeight="800"
+                color="white"
+                backgroundColor="background"
+                paddingTop="36"
+                paddingBottom="30"
+              >
+                Each ⚡️ sent has points = (sender's Power Score)*10 splitting
+                50/50 between sender and receiver
+              </Box>
             </Rows>
           ),
           intents: [
@@ -985,10 +967,12 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             backgroundColor="background"
             height="2/5"
             paddingTop="32"
+            alignContent="center"
+            alignItems="center"
           >
-                      <Text color="green" size="24" decoration="solid" weight="800">
-            Powergame Stats
-          </Text>
+            <Text color="green" size="24" decoration="solid" weight="800">
+              Powergame Stats
+            </Text>
           </Row>
           <Divider color="green" />
           <Row
@@ -998,11 +982,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             alignVertical="center"
             padding="16"
           >
-            <HStack
-              gap="18"
-              alignHorizontal="center"
-              alignVertical="center"
-            >
+            <HStack gap="18" alignHorizontal="center" alignVertical="center">
               <img
                 src={pfpUrl}
                 width="128"
@@ -1013,19 +993,10 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 }}
               />
               <VStack gap="1">
-                <Text
-                  color="white"
-                  size="18"
-                  weight="800"
-                  wrap="balance"
-                >
+                <Text color="white" size="18" weight="800" wrap="balance">
                   {username}
                 </Text>
-                <Text
-                  color="green"
-                  size="18"
-                  weight="800"
-                >
+                <Text color="green" size="18" weight="800">
                   got the power!
                 </Text>
               </VStack>
@@ -1037,33 +1008,31 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 flexWrap="nowrap"
                 display="flex"
               >
-                <Text
-                  color="white"
-                  size="18"
-                  wrap="balance"
-                >
+                <Text color="white" size="18" wrap="balance">
                   ⚡️sent/received: {reactionsSent}/{reactionsReceived}
                 </Text>
-                <Text
-                  color="white"
-                  size="18"
-                >
+                <Text color="white" size="18">
                   💰points earned: {points}
                 </Text>
-                <Text
-                  color="white"
-                  size="18"
-                >
+                <Text color="white" size="18">
                   🏆power rank: {rank}
                 </Text>
               </Box>
             </HStack>
           </Row>
           <Divider color="green" />
-            <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
-              Each ⚡️ sent has points = (sender's Power Score)*10 splitting
-              50/50 between sender and receiver
-            </Box>
+          <Box
+            fontSize="20"
+            textAlign="center"
+            fontWeight="800"
+            color="white"
+            backgroundColor="background"
+            paddingTop="36"
+            paddingBottom="30"
+          >
+            Each ⚡️ sent has points = (sender's Power Score)*10 splitting 50/50
+            between sender and receiver
+          </Box>
         </Rows>
       ),
       intents: [
@@ -1098,8 +1067,10 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           backgroundColor="background"
           height="2/5"
           paddingTop="32"
+          alignContent="center"
+          alignItems="center"
         >
-                    <Text color="green" size="24" decoration="solid" weight="800">
+          <Text color="green" size="24" decoration="solid" weight="800">
             Powergame Stats
           </Text>
         </Row>
@@ -1111,11 +1082,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           alignVertical="center"
           padding="16"
         >
-          <HStack
-            gap="18"
-            alignHorizontal="center"
-            alignVertical="center"
-          >
+          <HStack gap="18" alignHorizontal="center" alignVertical="center">
             <img
               src={pfpUrl}
               width="128"
@@ -1126,19 +1093,10 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               }}
             />
             <VStack gap="1">
-              <Text
-                color="white"
-                size="18"
-                weight="800"
-                wrap="balance"
-              >
+              <Text color="white" size="18" weight="800" wrap="balance">
                 {username}
               </Text>
-              <Text
-                color="green"
-                size="18"
-                weight="800"
-              >
+              <Text color="green" size="18" weight="800">
                 got the power!
               </Text>
             </VStack>
@@ -1150,33 +1108,31 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
               flexWrap="nowrap"
               display="flex"
             >
-              <Text
-                color="white"
-                size="18"
-                wrap="balance"
-              >
+              <Text color="white" size="18" wrap="balance">
                 ⚡️sent/received: {reactionsSent}/{reactionsReceived}
               </Text>
-              <Text
-                color="white"
-                size="18"
-              >
+              <Text color="white" size="18">
                 💰points earned: {points}
               </Text>
-              <Text
-                color="white"
-                size="18"
-              >
+              <Text color="white" size="18">
                 🏆power rank: {rank}
               </Text>
             </Box>
           </HStack>
         </Row>
         <Divider color="green" />
-          <Box fontSize="20" textAlign="center" fontWeight="800" color="white" backgroundColor="background" paddingTop="36" paddingBottom="30">
-            Each ⚡️ sent has points = (sender's Power Score)*10 splitting
-            50/50 between sender and receiver
-          </Box>
+        <Box
+          fontSize="20"
+          textAlign="center"
+          fontWeight="800"
+          color="white"
+          backgroundColor="background"
+          paddingTop="36"
+          paddingBottom="30"
+        >
+          Each ⚡️ sent has points = (sender's Power Score)*10 splitting 50/50
+          between sender and receiver
+        </Box>
       </Rows>
     ),
     intents: [
