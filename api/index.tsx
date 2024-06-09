@@ -120,6 +120,13 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       console.log(
         "Hash exists in the database and interactor fid is equal to the fid from the database"
       );
+      hash = await generateRandomHash();
+      // update the hash in the database
+      await sql`
+        UPDATE user_scores
+        SET hash = ${hash}
+        WHERE fid = ${fid}
+      `;
     } else {
       console.log(
         "Hash exists in the database but interactor fid is not equal to the fid from the database"
@@ -439,7 +446,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     if (existingFid.rows.length > 0) {
       // set score
       score = existingFid.rows[0].score;
-      // regenerate hash to a new one 
+      // regenerate hash to a new one
       hash = await generateRandomHash();
       // update the hash in the database
       await sql`
@@ -927,23 +934,26 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
   } else {
     // no data in the db for this user yet, can't check score TODO: do some kind of fallback for now
     ({ username, pfpUrl, fid } = c.var.interactor || {});
-    console.log(`Hash doesn't exist with username ${username} and fid ${fid}. Attempting to fetch based on fid.`);
-
+    console.log(
+      `Hash doesn't exist with username ${username} and fid ${fid}. Attempting to fetch based on fid.`
+    );
 
     if (c.var.interactor !== undefined) {
-    // attempt to fetch the data based on fid instead 
+      // attempt to fetch the data based on fid instead
       const existingFid = await sql`
         SELECT fid, points, username, pfpurl, reactions_sent, reactions_received, rank, hash
         FROM user_points
         WHERE fid = ${fid}
       `;
 
-      console.log(`Data fetched based on fid is ${JSON.stringify(existingFid.rows)}`);
-
+      console.log(
+        `Data fetched based on fid is ${JSON.stringify(existingFid.rows)}`
+      );
 
       // set sent, received, points, rank to 0
       reactionsSent = existingFid.rows[0]?.reactions_sent.toString() || "0";
-      reactionsReceived = existingFid.rows[0]?.reactions_received.toString() || "0";
+      reactionsReceived =
+        existingFid.rows[0]?.reactions_received.toString() || "0";
       points = existingFid.rows[0]?.points.toString() || "0";
       rank = existingFid.rows[0]?.rank.toString() || lastRank.toString();
       if (existingFid.rows.length > 0) {
@@ -972,11 +982,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             padding="16"
             grow
           >
-            <HStack
-              gap="18"
-              alignHorizontal="center"
-              alignVertical="center"
-            >
+            <HStack gap="18" alignHorizontal="center" alignVertical="center">
               <img
                 src={pfpUrl}
                 width="128"
@@ -1057,11 +1063,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           padding="16"
           grow
         >
-          <HStack
-            gap="18"
-            alignHorizontal="center"
-            alignVertical="center"
-          >
+          <HStack gap="18" alignHorizontal="center" alignVertical="center">
             <img
               src={pfpUrl}
               width="128"
