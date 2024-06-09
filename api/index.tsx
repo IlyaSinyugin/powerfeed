@@ -24,9 +24,9 @@ import {
 let fidScore: { [key: string]: number } = {};
 
 // Uncomment to use Edge Runtime.
-export const config = {
-  runtime: 'edge',
-}
+// export const config = {
+//   runtime: 'edge',
+// }
 
 export const app = new Frog({
   assetsPath: "/",
