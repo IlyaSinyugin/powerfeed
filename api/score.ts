@@ -70,7 +70,7 @@ async function insertDataIntoDatabase(rows: any) {
 async function filterCasts(rows: any) {
     console.log('Filtering data...');
     const filteredRows = [];
-    const userReplyCount: { [key: string]: { count: number, cutoff: boolean, limit: number } } = {};
+    const userReplyCount: { [key: string]: { count: number, limit: number } } = {};
     const userCastReplySet: { [key: string]: Set<string> } = {};
     const initialCutoffDate = new Date('2024-06-05T16:00:00Z');
     const additionalCutoffDate = new Date('2024-06-10T18:00:00Z');
@@ -95,9 +95,7 @@ async function filterCasts(rows: any) {
             if (!userReplyCount[userKey]) {
                 const isPowerUser = powerUsersFids.includes(Number(row.reply_from_fid));
                 let limit;
-                // if (row.reply_from_fid === 429107) {
-                //     console.log('Power user:', isPowerUser);
-                // }
+
                 if (replyDate >= additionalCutoffDate) {
                     limit = 3;
                 } else if (replyDate >= initialCutoffDate) {
@@ -105,7 +103,9 @@ async function filterCasts(rows: any) {
                 } else {
                     limit = 3;
                 }
-                userReplyCount[userKey] = { count: 0, cutoff: replyDate >= initialCutoffDate, limit: limit };
+
+                userReplyCount[userKey] = { count: 0, limit: limit };
+                console.log(`Initialized userReplyCount for ${userKey}:`, userReplyCount[userKey]);
             }
 
             if (!userCastReplySet[userCastKey]) {
@@ -116,6 +116,9 @@ async function filterCasts(rows: any) {
                 filteredRows.push(row);
                 userReplyCount[userKey].count++;
                 userCastReplySet[userCastKey].add(row.cast_hash);
+                console.log(`Added cast ${row.cast_hash} to filteredRows for user ${row.reply_from_fid}`);
+            } else {
+                console.log(`Cast ${row.cast_hash} skipped for user ${row.reply_from_fid}: Count ${userReplyCount[userKey].count}, Limit ${userReplyCount[userKey].limit}`);
             }
         }
     }
@@ -139,6 +142,8 @@ async function filterCasts(rows: any) {
         console.error('Error inserting filtered data:', error);
     }
 }
+
+
 
 
 async function calculateAndStorePoints() {
