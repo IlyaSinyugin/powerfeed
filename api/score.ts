@@ -88,7 +88,12 @@ async function filterCasts(rows: any) {
     for (let row of rows) {
         const replyDate = new Date(row.cast_timestamp);
         const dateKey = getAdjustedDateKey(replyDate);
-        const userKey = `${row.reply_from_fid}-${dateKey}`;
+        
+        // Determine if the reply is before or after the additionalCutoffDate time on the same day
+        const isAfterCutoff = replyDate >= additionalCutoffDate && replyDate.toISOString().split('T')[0] === additionalCutoffDate.toISOString().split('T')[0];
+
+        // Adjust userKey to include time segment
+        const userKey = `${row.reply_from_fid}-${dateKey}-${isAfterCutoff ? 'after' : 'before'}`;
         const userCastKey = `${row.reply_from_fid}-${row.original_cast_hash}`;
 
         if (row.reply_text.includes('⚡') && row.reply_from_fid !== row.reply_to_fid) {
@@ -142,6 +147,7 @@ async function filterCasts(rows: any) {
         console.error('Error inserting filtered data:', error);
     }
 }
+
 
 
 
