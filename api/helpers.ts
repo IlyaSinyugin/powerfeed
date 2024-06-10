@@ -106,14 +106,16 @@ async function fetchPowerScore(fid: any) {
                         return 1;
                     } else {
                         await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].score} WHERE fid = ${fid}`;
+                        console.log(`Returning the score ${data.query_result.data.rows[0].score}`)
                         return data.query_result.data.rows[0].score;
                     }
                 }
             }
         } else {
             fidScore[fid] = data.query_result.data.rows[0].score;
-            console.log(`fidScore as a whole is ${JSON.stringify(fidScore)}`)
-            return data.query_result;
+            console.log(`Returning the score ${data.query_result.data.rows[0].score}`)
+            await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].score} WHERE fid = ${fid}`;
+            return data.query_result.data.rows[0].score;
         }
     } catch (e) {
         console.error('Error fetching power score:', e);
@@ -548,5 +550,9 @@ async function fetchBuildScoreForFID(fid: any) {
 // fetchPowerUsers().then(() => {
 //     console.log('Power users fetched successfully');
 // });
+
+fetchPowerScore('453709').then(
+    (score) => console.log(`Power score: ${JSON.stringify(score)}`)
+);
 
 export { fetchPowerUsers, fetchPowerScore, fetchPowerScoreGame2, fetchPowerScoreGame2ForFID, fetchETHaddresses, fetchETHaddressesForFID, fetchETHaddressesForNull, fetchBuildScore, fetchBuildScoreForFID, fetchFids, fetchFidsWithNullEthAddresses};
