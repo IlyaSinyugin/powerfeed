@@ -196,7 +196,9 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         console.log(
           `Existing data & generated hash: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, buildScore: ${buildScore}, hash: ${hash}`
         );
-        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+
+
         return c.res({
           image: (
             // game 1
@@ -436,7 +438,9 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         console.log(
           `Inserted new data, such as username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score_game2: ${score}, buildScore: ${buildScore}, hash: ${hash}`
         );
-        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+
+
         return c.res({
           image: (
             // <Rows gap="1" grow>
@@ -710,7 +714,9 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     `;
     }
   }
-  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20OᖴᖴᑕᕼᗩIᑎ%20ᔕᑌᗰᗰEᖇ!🏖️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+
+
 
   console.log(`Username: ${username}, FID: ${fid}, Score: ${score}, Build Score: ${buildScore} `);
 
