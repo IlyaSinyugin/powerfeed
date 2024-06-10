@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import powerUsersFids from './powerUsersFids.json' with { type: "json" };
 // import dictionary
-import { fetchPowerScore } from "./helpers.js";
+import { fetchPowerScore, fetchBuildScoreForFID } from "./helpers.js";
 import { sql } from "@vercel/postgres";
 import crypto from "crypto";
 
@@ -72,7 +72,8 @@ async function filterCasts(rows: any) {
     const filteredRows = [];
     const userReplyCount: { [key: string]: { count: number, cutoff: boolean, limit: number } } = {};
     const userCastReplySet: { [key: string]: Set<string> } = {};
-    const cutoffDate = new Date('2024-06-05T16:00:00Z');
+    const initialCutoffDate = new Date('2024-06-05T16:00:00Z');
+    const additionalCutoffDate = new Date('2024-06-10T18:00:00Z');
 
     // Adjust the dateKey calculation to start the new day at 16:00 UTC
     const getAdjustedDateKey = (date: Date) => {
@@ -93,11 +94,18 @@ async function filterCasts(rows: any) {
         if (row.reply_text.includes('⚡') && row.reply_from_fid !== row.reply_to_fid) {
             if (!userReplyCount[userKey]) {
                 const isPowerUser = powerUsersFids.includes(Number(row.reply_from_fid));
+                let limit;
                 // if (row.reply_from_fid === 429107) {
                 //     console.log('Power user:', isPowerUser);
                 // }
-                const limit = replyDate >= cutoffDate ? (isPowerUser ? 10 : 5) : 3;
-                userReplyCount[userKey] = { count: 0, cutoff: replyDate >= cutoffDate, limit: limit };
+                if (replyDate >= additionalCutoffDate) {
+                    limit = 3;
+                } else if (replyDate >= initialCutoffDate) {
+                    limit = isPowerUser ? 10 : 5;
+                } else {
+                    limit = 3;
+                }
+                userReplyCount[userKey] = { count: 0, cutoff: replyDate >= initialCutoffDate, limit: limit };
             }
 
             if (!userCastReplySet[userCastKey]) {
@@ -144,15 +152,20 @@ async function calculateAndStorePoints() {
 
         // Create a map to store the calculated scores and another to store user scores
         const userScoresMap: { [key: string]: number } = {};
-        const userPowerScores: { [key: string]: number } = {};
+        const userPowerScores: { [key: string]: { score: number, score_game2: number | null, builder_score: number | null } } = {};
         const reactionsSentMap: { [key: string]: number } = {};
         const reactionsReceivedMap: { [key: string]: number } = {};
+        const additionalCutoffDate = new Date('2024-06-10T18:00:00Z');
 
         console.log('Initializing user scores...');
         // Initialize scores to 0 and store user scores
         users.forEach((user) => {
             userScoresMap[user.fid] = 0;
-            userPowerScores[user.fid] = Number(user.score);
+            userPowerScores[user.fid] = { 
+                score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1), 
+                score_game2: user.score_game2 ? Number(user.score_game2) : 0, 
+                builder_score: user.builder_score ? Number(user.builder_score) : 0 
+            };
             reactionsSentMap[user.fid] = 0;
             reactionsReceivedMap[user.fid] = 0;
         });
@@ -179,21 +192,29 @@ async function calculateAndStorePoints() {
                 if (userResult.rows.length > 0) {
                     const user = userResult.rows[0];
                     userScoresMap[user.fid] = 0;
-                    userPowerScores[user.fid] = Number(user.score);
+                    userPowerScores[user.fid] = { 
+                        score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1), 
+                        score_game2: user.score_game2 ? Number(user.score_game2) : (user.score ? Number(user.score) : 1), 
+                        builder_score: user.builder_score ? Number(user.builder_score) : 0 
+                    };
                     reactionsSentMap[user.fid] = 0;
                     reactionsReceivedMap[user.fid] = 0;
                 } else {
                     // Fetch the user's power score and other data
-                    const { username, pfpUrl, fid, score } = await fetchUserData(replyFromFid) as any;
+                    const { username, pfpUrl, fid, score, builder_score } = await fetchUserData(replyFromFid) as any;
                     if (username && pfpUrl && fid && !isNaN(score)) {
                         const hash = await generateRandomHash();
                         userScoresMap[fid] = 0;
-                        userPowerScores[fid] = Number(score);
+                        userPowerScores[fid] = { 
+                            score: score? Number(score) : 1, 
+                            score_game2: score? Number(score) : 1,
+                            builder_score: builder_score ? Number(builder_score) : 0 
+                        };                        
                         reactionsSentMap[fid] = 0;
                         reactionsReceivedMap[fid] = 0;
                         await sql`
-                            INSERT INTO user_scores (username, pfpurl, fid, score, hash)
-                            VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
+                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game2, builder_score, hash)
+                            VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
                     }
@@ -209,33 +230,48 @@ async function calculateAndStorePoints() {
                 if (userResult.rows.length > 0) {
                     const user = userResult.rows[0];
                     userScoresMap[user.fid] = 0;
-                    userPowerScores[user.fid] = Number(user.score);
+                    userPowerScores[user.fid] = { 
+                        score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1), 
+                        score_game2: user.score_game2 ? Number(user.score_game2) : (user.score ? Number(user.score) : 1), 
+                        builder_score: user.builder_score ? Number(user.builder_score) : 0 
+                    };                    
                     reactionsSentMap[user.fid] = 0;
                     reactionsReceivedMap[user.fid] = 0;
                 } else {
                     // Fetch the user's power score and other data
-                    const { username, pfpUrl, fid, score } = await fetchUserData(replyToFid) as any;
+                    const { username, pfpUrl, fid, score, builder_score } = await fetchUserData(replyToFid) as any;
                     if (username && pfpUrl && fid && !isNaN(score)) {
                         const hash = await generateRandomHash();
                         userScoresMap[fid] = 0;
-                        userPowerScores[fid] = Number(score);
+                        userPowerScores[fid] = { 
+                            score: Number(score), 
+                            score_game2: score ? Number(score) : 1, 
+                            builder_score: builder_score ? Number(builder_score) : 0 
+                        };                        
                         reactionsSentMap[fid] = 0;
                         reactionsReceivedMap[fid] = 0;
                         await sql`
-                            INSERT INTO user_scores (username, pfpurl, fid, score, hash)
-                            VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
+                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game2, builder_score, hash)
+                            VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
                     }
                 }
             }
 
-            const powerScore = userPowerScores[replyFromFid];
+            let score;
+            const powerScores = userPowerScores[replyFromFid];
+
+            if (new Date(reaction.cast_timestamp) >= additionalCutoffDate) {
+                const game2Score = powerScores.score_game2 !== null ? powerScores.score_game2 : powerScores.score;
+                const builderScore = powerScores.builder_score !== null ? powerScores.builder_score : 0;
+                score = Math.floor(((game2Score + builderScore) / 2) * 10); // Multiply score by 10 to handle fractional points
+            } else {
+                score = Math.floor((powerScores.score / 2) * 10); // Multiply score by 10 to handle fractional points
+            }
 
             // Check if powerScore is a valid number
-            if (!isNaN(powerScore)) {
-                const score = Math.floor((powerScore / 2) * 10); // Multiply score by 10 to handle fractional points
-
+            if (!isNaN(score)) {
                 // Add score to the user who left the reaction
                 if (userScoresMap[replyFromFid] !== undefined) {
                     userScoresMap[replyFromFid] += score;
@@ -337,9 +373,11 @@ async function fetchUserData(fid: number) {
         pfpUrl = userData.pfp_url;
         console.log(`Successfully fetched user data for FID: ${fid}, username: ${username}, pfpUrl: ${pfpUrl}`);
         // now fetch the score 
-        const scoreData = await fetchPowerScore(fid.toString());
-        const score = scoreData.data.rows[0]?.power_score || 1; // Ensure score is a number
-        return { username, pfpUrl, fid, score };
+        let score = await fetchPowerScore(fid.toString());
+        score = score ? score : 1;
+        let builder_score = await fetchBuildScoreForFID(fid.toString());
+        builder_score = builder_score ? builder_score : 1;
+        return { username, pfpUrl, fid, score, builder_score };
     } catch (error) {
         console.error(`Error fetching user data for FID: ${fid}`, error);
     }
