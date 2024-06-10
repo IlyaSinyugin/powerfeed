@@ -98,24 +98,24 @@ async function fetchPowerScore(fid: any) {
                 data = await response.json();
                 if ('query_result' in data) {
                     // add fid and score to the dictionary
-                    fidScore[fid] = data.query_result.data.rows[0].score;
+                    fidScore[fid] = data.query_result.data.rows[0].power_score;
                     console.log(`fidScore as a whole is ${JSON.stringify(fidScore)}`)
                     if (data.query_result.data.rows[0].score === 0) {
                         // insert it to the db update 
                         await sql`UPDATE user_scores SET score_game2 = 1 WHERE fid = ${fid}`;
                         return 1;
                     } else {
-                        await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].score} WHERE fid = ${fid}`;
-                        console.log(`Returning the score ${data.query_result.data.rows[0].score}`)
-                        return data.query_result.data.rows[0].score;
+                        await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].power_score} WHERE fid = ${fid}`;
+                        console.log(`Returning the score ${JSON.stringify(data.query_result.data.rows[0].power_score)}`)
+                        return data.query_result.data.rows[0].power_score;
                     }
                 }
             }
         } else {
-            fidScore[fid] = data.query_result.data.rows[0].score;
-            console.log(`Returning the score ${data.query_result.data.rows[0].score}`)
-            await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].score} WHERE fid = ${fid}`;
-            return data.query_result.data.rows[0].score;
+            fidScore[fid] = data.query_result.data.rows[0].power_score;
+            console.log(`Returning the score ${JSON.stringify(data.query_result.data.rows[0])}`)
+            await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].power_score} WHERE fid = ${fid}`;
+            return data.query_result.data.rows[0].power_score;
         }
     } catch (e) {
         console.error('Error fetching power score:', e);
