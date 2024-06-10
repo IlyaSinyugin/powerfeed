@@ -69,7 +69,21 @@ async function insertDataIntoDatabase(rows: any) {
 
 async function filterCasts(rows: any) {
     console.log('Filtering data...');
-    const filteredRows = [];
+
+    // Retrieve the latest cast_timestamp from the powerfeed_replies_filtered table
+    const latestTimestampResult = await sql`
+        SELECT MAX(cast_timestamp) AS latest_timestamp FROM powerfeed_replies_filtered
+    `;
+    const latestTimestamp = latestTimestampResult.rows[0]?.latest_timestamp;
+    console.log('Latest timestamp in database:', latestTimestamp);
+
+    // Filter rows to only include those with a cast_timestamp greater than the latest timestamp
+    const filteredRows = latestTimestamp 
+        ? rows.filter((row: { cast_timestamp: string | number | Date; }) => new Date(row.cast_timestamp) > new Date(latestTimestamp))
+        : rows;
+
+    console.log('Number of new rows to process:', filteredRows.length);
+
     const userReplyCount: { [key: string]: { count: number, limit: number } } = {};
     const userCastReplySet: { [key: string]: Set<string> } = {};
     const initialCutoffDate = new Date('2024-06-05T16:00:00Z');
@@ -83,9 +97,11 @@ async function filterCasts(rows: any) {
     };
 
     // Sort rows by cast_timestamp to process them from the start of the day
-    rows.sort((a: any, b: any) => new Date(a.cast_timestamp).getTime() - new Date(b.cast_timestamp).getTime());
+    filteredRows.sort((a: any, b: any) => new Date(a.cast_timestamp).getTime() - new Date(b.cast_timestamp).getTime());
 
-    for (let row of rows) {
+    const finalFilteredRows = [];
+
+    for (let row of filteredRows) {
         const replyDate = new Date(row.cast_timestamp);
         const dateKey = getAdjustedDateKey(replyDate);
         
@@ -118,10 +134,10 @@ async function filterCasts(rows: any) {
             }
 
             if (userReplyCount[userKey].count < userReplyCount[userKey].limit && !userCastReplySet[userCastKey].has(row.cast_hash)) {
-                filteredRows.push(row);
+                finalFilteredRows.push(row);
                 userReplyCount[userKey].count++;
                 userCastReplySet[userCastKey].add(row.cast_hash);
-                console.log(`Added cast ${row.cast_hash} to filteredRows for user ${row.reply_from_fid}`);
+                console.log(`Added cast ${row.cast_hash} to finalFilteredRows for user ${row.reply_from_fid}`);
             } else {
                 console.log(`Cast ${row.cast_hash} skipped for user ${row.reply_from_fid}: Count ${userReplyCount[userKey].count}, Limit ${userReplyCount[userKey].limit}`);
             }
@@ -129,7 +145,7 @@ async function filterCasts(rows: any) {
     }
 
     try {
-        for (let row of filteredRows) {
+        for (let row of finalFilteredRows) {
             await sql`
                 INSERT INTO powerfeed_replies_filtered (
                     cast_fid, cast_hash, cast_timestamp, original_cast_hash, original_cast_timestamp,
@@ -147,6 +163,7 @@ async function filterCasts(rows: any) {
         console.error('Error inserting filtered data:', error);
     }
 }
+
 
 
 
