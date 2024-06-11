@@ -419,7 +419,7 @@ async function fetchBuildScore() {
         return;
     }
     const BATCH_SIZE = 99;
-    const RATE_LIMIT_DELAY = 200; // 10 requests per second
+    const RATE_LIMIT_DELAY = 150; // 15 requests per second
 
     // First process accounts where builder_score is 0 and eth_addresses is null
     let results = await sql`SELECT fid, eth_addresses FROM user_scores WHERE builder_score = 0 AND eth_addresses IS NULL`;
@@ -459,8 +459,11 @@ async function fetchBuildScore() {
                 try {
                     const response = await fetch(url, options);
                     const data = await response.json();
+                    console.log(`Data: ${JSON.stringify(data)} for address ${address} and fid ${user.fid}`);
                     const score = data.passport?.score || 0;
-                    totalBuildScore += score;
+                    if (score > totalBuildScore) {
+                        totalBuildScore = score;
+                    }
                     console.log(`Build score for address ${address} and fid ${user.fid}: ${score}`)
 
                     // Delay to respect rate limits
@@ -527,8 +530,11 @@ async function fetchBuildScore() {
                 try {
                     const response = await fetch(url, options);
                     const data = await response.json();
+                    console.log(`Data: ${JSON.stringify(data)} for address ${address} and fid ${user.fid}`);
                     const score = data.passport?.score || 0;
-                    totalBuildScore += score;
+                    if (score > totalBuildScore) {
+                        totalBuildScore = score;
+                    }
                     console.log(`Build score for address ${address} and fid ${user.fid}: ${score}`);
 
                     // Delay to respect rate limits
@@ -596,8 +602,12 @@ async function fetchBuildScore() {
                 try {
                     const response = await fetch(url, options);
                     const data = await response.json();
+                    console.log(`Data: ${JSON.stringify(data)} for address ${address} and fid ${user.fid}`);
+
                     const score = data.passport?.score || 0;
-                    totalBuildScore += score;
+                    if (score > totalBuildScore) {
+                        totalBuildScore = score;
+                    }
                     console.log(`Build score for address ${address} and fid ${user.fid}: ${score}`);
 
                     // Delay to respect rate limits
@@ -665,9 +675,12 @@ async function fetchBuildScoreForFID(fid: any) {
         try {
             const response = await fetch(url, options);
             const data = await response.json();
-            const score = data.passport?.score || 0;
-            totalBuildScore += score;
+            console.log(`Data: ${JSON.stringify(data)} for address ${address} and fid ${fid}`);
 
+            const score = data.passport?.score || 0;
+            if (score > totalBuildScore) {
+                totalBuildScore = score;
+            }
             // Delay to respect rate limits
             await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
         } catch (e) {
@@ -784,9 +797,9 @@ async function fetchUsernamesForMissingPowerUsers() {
 // });
 
 // Call the function to fetch usernames for missing power users
-fetchUsernamesForMissingPowerUsers().then(() => {
-    console.log('Usernames fetched successfully');
-});
+// fetchUsernamesForMissingPowerUsers().then(() => {
+//     console.log('Usernames fetched successfully');
+// });
 
 
 // fetchBuildScore().then(
