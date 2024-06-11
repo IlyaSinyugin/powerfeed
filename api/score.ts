@@ -405,6 +405,21 @@ async function fetchUserData(fid: number) {
     }
 }
 
+// function delay(ms: any) {
+//     return new Promise(resolve => setTimeout(resolve, ms));
+// }
+
+// async function runRetrieveJSONLoop() {
+//     while (true) {
+//         await retrieveJSON();
+//         await delay(60000); // Adjust the delay as needed (60000ms = 1 minute)
+//     }
+// }
+
+// runRetrieveJSONLoop().then(() => {
+//     console.log('Started JSON retrieval loop.');
+// });
+
 
 
 // execute the functions above 
