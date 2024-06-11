@@ -548,13 +548,15 @@ async function fetchBuildScoreForFID(fid: any) {
     }
     const RATE_LIMIT_DELAY = 100; // 10 requests per second
 
-    let { rows } = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid} AND eth_addresses IS NOT NULL`;
+    let results = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid} AND eth_addresses IS NOT NULL`;
+    let rows = results.rows;
 
     if (rows.length === 0) {
         console.log(`No eth_addresses found for fid ${fid}`);
         // try to find eth addresses for that fid 
         await fetchETHaddressesForFID(fid);
-        ({ rows } = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid} AND eth_addresses IS NOT NULL`);
+        results = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid} AND eth_addresses IS NOT NULL`;
+        rows = results.rows;
 
         if (rows.length === 0) {
             console.error(`again - No eth_addresses found for fid ${fid}`);
@@ -608,9 +610,13 @@ async function fetchBuildScoreForFID(fid: any) {
 
 
 
-fetchBuildScore().then(
-    () => console.log('Build scores updated successfully')
-);
+// fetchBuildScore().then(
+//     () => console.log('Build scores updated successfully')
+// );
+
+// fetchBuildScoreForFID('282223').then(
+//     (score) => console.log(`Build score: ${score}`)
+// );
 
 
 // fetchPowerScoreGame2().then(
