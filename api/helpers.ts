@@ -2,6 +2,7 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import path from 'path';
 import { sql } from "@vercel/postgres";
+import crypto from "crypto";
 
 import powerUsersFids from './powerUsersFids.json' with { type: "json" };
 // import dictionary
@@ -10,6 +11,12 @@ import { fidScore } from './index.js';
 
 // import it outside of api folder
 dotenv.config({ path: path.join(process.cwd(), './.env') });
+
+async function generateRandomHash() {
+    const randomString = crypto.randomBytes(16).toString('base64url').substring(0, 22); 
+    console.log(`Random hash generated: ${randomString}`);
+    return randomString;
+}
 
 // fetch all powerusers from Neynar 
 async function fetchPowerUsers() {
@@ -297,7 +304,7 @@ async function fetchETHaddressesForFID(fid: any) {
             const results = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid}`;
             const rows = results.rows;
 
-            console.log(`Rows: ${JSON.stringify(rows)}`);
+            console.log(`Rows: ${JSON.stringify(rows)}, length of rows: ${rows.length}`);
             if (rows.length > 0) {
                 const currentEthAddresses = rows[0].eth_addresses;
 
@@ -312,9 +319,12 @@ async function fetchETHaddressesForFID(fid: any) {
             } else {
                 console.log(`No eth_addresses found for fid ${fid}`);
                 // Insert the new eth_addresses
+                console.log(`Eth addresses to be inserted are ${ethAddresses}`)
                 if (ethAddresses) {
-                    await sql`INSERT INTO user_scores (fid, eth_addresses) VALUES (${fid}, ${ethAddresses})`;
-                    console.log(`ETH addresses inserted successfully for fid ${fid}`);
+                    //await sql`INSERT INTO user_scores (fid, eth_addresses) VALUES (${fid}, ${ethAddresses})`;
+                    console.log(`ETH addresses to be returned for fid ${fid}: ${ethAddresses}`);
+                    // insert into user_eth_addresses where the columns are fid and eth_addresses
+                    await sql`INSERT INTO user_eth_addresses (fid, eth_addresses) VALUES (${fid}, ${ethAddresses}) ON CONFLICT (fid) DO NOTHING`;
                     return ethAddresses;
                 }
             }
@@ -665,13 +675,23 @@ async function fetchBuildScoreForFID(fid: any) {
     if (rows.length === 0) {
         console.log(`No eth_addresses found for fid ${fid}`);
         // try to find eth addresses for that fid 
-        const buildScore = await fetchETHaddressesForFID(fid);
+        const ethAddresses = await fetchETHaddressesForFID(fid);
+        // insert them into db and on conflict do nothing 
         results = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid} AND eth_addresses IS NOT NULL`;
         rows = results.rows;
 
         if (rows.length === 0) {
             console.error(`again - No eth_addresses found for fid ${fid}`);
-            return 0;
+            // try to fetch from backup table user_eth_addresses
+            let localResult = await sql`SELECT eth_addresses FROM user_eth_addresses WHERE fid = ${fid}`;
+            let localRows = localResult.rows;
+            if (localRows.length === 0) {
+                console.error(`No eth_addresses found for fid ${fid} in backup table user_eth_addresses`);
+                return 0;
+            } else {
+                rows = localRows;
+                console.log(`ETH addresses found for fid ${fid} in backup table user_eth_addresses`);
+            }
         }
     }
 
@@ -721,6 +741,27 @@ async function fetchBuildScoreForFID(fid: any) {
     }
 
     return totalBuildScore;
+}
+
+async function syncETHAddresses(fid: any) {
+    console.log(`Function of syncETHAddresses is called with fid ${fid}`);
+    const ethAddressesResult = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid}`;
+    const ethAddressesRows = ethAddressesResult.rows;
+    console.log(`ETH addresses rows: ${JSON.stringify(ethAddressesRows)}, length: ${ethAddressesRows.length}`);
+    if (ethAddressesRows.length === 0 || ethAddressesResult.rows[0].eth_addresses === null) {
+        // try to find eth addresses from backup table user_eth_addresses
+        const localResult = await sql`SELECT eth_addresses FROM user_eth_addresses WHERE fid = ${fid}`;
+        const localRows = localResult.rows;
+        console.log(`Local rows: ${JSON.stringify(localRows)}`)
+        if (localRows.length > 0) {
+            const ethAddresses = localRows[0].eth_addresses;
+            console.log(`ETH addresses found in backup table for fid ${fid}: ${ethAddresses}`);
+            // print the whole row from user_scores
+            let result = await sql`UPDATE user_scores SET eth_addresses = ${ethAddresses} WHERE fid = ${fid}`;
+            // print the result 
+            console.log(`Result of updating eth_addresses: ${JSON.stringify(result)}`);
+        }
+    }
 }
 
 
@@ -849,4 +890,4 @@ async function fetchUsernamesForMissingPowerUsers() {
 //     (score) => console.log(`Power score: ${JSON.stringify(score)}`)
 // );
 
-export { fetchPowerUsers, fetchPowerScore, fetchPowerScoreGame2, fetchPowerScoreGame2ForFID, fetchETHaddresses, fetchETHaddressesForFID, fetchETHaddressesForNull, fetchBuildScore, fetchBuildScoreForFID, fetchFids, fetchFidsWithNullEthAddresses};
+export { fetchPowerUsers, syncETHAddresses, fetchPowerScore, fetchPowerScoreGame2, fetchPowerScoreGame2ForFID, fetchETHaddresses, fetchETHaddressesForFID, fetchETHaddressesForNull, fetchBuildScore, fetchBuildScoreForFID, fetchFids, fetchFidsWithNullEthAddresses};

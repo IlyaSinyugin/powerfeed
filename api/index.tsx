@@ -6,7 +6,7 @@ import { neynar, type NeynarVariables } from "frog/middlewares";
 // import { neynar } from 'frog/hubs'
 import { handle } from "frog/vercel";
 import crypto from "crypto";
-import { fetchPowerScore, fetchPowerScoreGame2ForFID, fetchBuildScoreForFID } from "./helpers.js";
+import { fetchPowerScore, fetchPowerScoreGame2ForFID, fetchBuildScoreForFID, syncETHAddresses } from "./helpers.js";
 import {
   Row,
   Rows,
@@ -198,6 +198,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         );
         const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
+        await syncETHAddresses(fid);
 
         return c.res({
           image: (
@@ -357,6 +358,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           score = await fetchPowerScore(fid?.toString());
           // fetch buildScore too 
           buildScore = await fetchBuildScoreForFID(fid);
+          await syncETHAddresses(fid);
         };
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Timeout")), 3000)
@@ -438,6 +440,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         console.log(
           `Inserted new data, such as username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score_game2: ${score}, buildScore: ${buildScore}, hash: ${hash}`
         );
+        await syncETHAddresses(fid);
+
         const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
 
@@ -657,7 +661,6 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       const fetchScore = async () => {
         score = await fetchPowerScore(fid?.toString());
         buildScore = await fetchBuildScoreForFID(fid);
-
       };
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Timeout")), 3000)
@@ -712,6 +715,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         INSERT INTO user_scores (username, pfpurl, fid, score_game2, builder_score, hash)
         VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${buildScore}, ${hash})
     `;
+      await syncETHAddresses(fid);
+
     }
   }
   const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
