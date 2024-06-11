@@ -29,6 +29,7 @@ async function fetchPowerUsers() {
     while (hasMore) {
         let url = 'https://api.neynar.com/v2/farcaster/user/power?limit=100';
         if (nextCursor) {
+            console.log(`Fetching next page with cursor: ${nextCursor}`)
             url += `&cursor=${encodeURIComponent(nextCursor)}`;
         }
 
@@ -38,6 +39,7 @@ async function fetchPowerUsers() {
             powerUsers = powerUsers.concat(data.users);
             if (data.next && data.next.cursor) {
                 nextCursor = data.next.cursor;
+                console.log(`Next cursor: ${nextCursor}`)
             } else {
                 hasMore = false;
             }
@@ -46,7 +48,7 @@ async function fetchPowerUsers() {
             break;
         }
 
-        await delay(5000);
+        await delay(500);
     }
 
     // Extract FIDs and save them to a JSON file
@@ -691,6 +693,100 @@ async function fetchBuildScoreForFID(fid: any) {
     return totalBuildScore;
 }
 
+
+async function fetchUsernamesForMissingPowerUsers() {
+    const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || 'NEYNAR_API_DOCS';
+    const BATCH_SIZE = 99;
+    let powerUsersFids = [];
+
+    // Load powerUsersFids from the JSON file
+    try {
+        const data = fs.readFileSync(path.join(process.cwd(), './powerUsersFids.json'), 'utf8');
+        powerUsersFids = JSON.parse(data);
+    } catch (err) {
+        console.error('Error loading powerUsersFids from JSON file:', err);
+        return;
+    }
+
+    console.log(`Length of powerUsersFids: ${powerUsersFids.length}`);
+
+    // Check each FID one-by-one
+    let missingFids = [];
+    for (const fid of powerUsersFids) {
+        const fidStr = String(fid).trim();
+        console.log(`Checking FID in database: ${fidStr}`);
+        try {
+            const result = await sql`SELECT fid FROM user_scores WHERE fid = ${fidStr}`;
+            if (result.rows.length === 0) {
+                console.log(`FID ${fidStr} is missing`);
+                missingFids.push(fidStr);
+            } else {
+                console.log(`FID ${fidStr} exists in the database`);
+            }
+        } catch (error) {
+            console.error(`Error checking FID ${fidStr} in database:`, error);
+        }
+    }
+
+    if (missingFids.length === 0) {
+        console.log('No missing FIDs found.');
+        return;
+    }
+
+    console.log(`Missing FIDs: ${missingFids.length}`);
+
+    // Fetch usernames for the missing FIDs
+    let usernames: any = [];
+    for (let i = 0; i < missingFids.length; i += BATCH_SIZE) {
+        const batch = missingFids.slice(i, i + BATCH_SIZE);
+        const fidsParam = batch.join(',');
+
+        const options = {
+            method: 'GET',
+            headers: {
+                accept: 'application/json',
+                api_key: NEYNAR_API_KEY,
+            },
+        };
+
+        const url = `https://api.neynar.com/v2/farcaster/user/bulk?fids=${encodeURIComponent(fidsParam)}`;
+
+        try {
+            console.log(`Fetching usernames for FIDs batch: ${fidsParam}`);
+            const response = await fetch(url, options);
+            const data = await response.json();
+
+            if (data.users) {
+                const batchUsernames = data.users.map((user: any) => {
+                    console.log(`Fetched username for FID ${user.fid}: ${user.username}`);
+                    return user.username;
+                });
+                usernames = usernames.concat(batchUsernames);
+            } else {
+                console.error('No users in response:', data);
+            }
+        } catch (e) {
+            console.error('Error fetching usernames:', e);
+        }
+
+        // Delay between requests to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    // Save usernames to a file
+    fs.writeFileSync('usernames.txt', usernames.join('\n'));
+    console.log('Usernames saved to usernames.txt');
+}
+
+
+// fetchPowerUsers().then(() => {
+//     console.log('Power users fetched successfully');
+// });
+
+// Call the function to fetch usernames for missing power users
+fetchUsernamesForMissingPowerUsers().then(() => {
+    console.log('Usernames fetched successfully');
+});
 
 
 // fetchBuildScore().then(
