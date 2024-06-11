@@ -129,7 +129,8 @@ async function fetchPowerScoreGame2() {
     const powerUsers = powerUsersFids.join(',');
 
     try {
-        const { rows } = await sql`SELECT fid FROM user_scores`;
+        const result = await sql`SELECT fid FROM user_scores`;
+        const rows = result.rows;
         const targetFids = rows.map(row => row.fid).join(',');
 
         console.log(`Fetching power scores for ${rows.length} users...`);
@@ -253,12 +254,14 @@ async function fetchPowerScoreGame2ForFID(fid: any, retries = 3) {
 }
 
 async function fetchFids(): Promise<string[]> {
-    const { rows } = await sql`SELECT fid FROM user_scores`;
+    const result = await sql`SELECT fid FROM user_scores`;
+    const rows = result.rows;
     return rows.map(row => row.fid);
 }
 
 async function fetchFidsWithNullEthAddresses(): Promise<string[]> {
-    const { rows } = await sql`SELECT fid FROM user_scores WHERE eth_addresses IS NULL`;
+    const result = await sql`SELECT fid FROM user_scores WHERE eth_addresses IS NULL`;
+    const rows = result.rows;
     return rows.map(row => row.fid);
 }
 
@@ -284,7 +287,8 @@ async function fetchETHaddressesForFID(fid: any) {
             const ethAddresses = Array.from(new Set(user.verified_addresses.eth_addresses)).join(',');
 
             // Fetch current eth_addresses from the database
-            const { rows } = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid}`;
+            const results = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid}`;
+            const rows = results.rows;
             if (rows.length > 0) {
                 const currentEthAddresses = rows[0].eth_addresses;
 
@@ -336,7 +340,8 @@ async function fetchETHaddresses() {
                     const ethAddresses = Array.from(new Set(user.verified_addresses.eth_addresses)).join(',');
 
                     // Fetch current eth_addresses from the database
-                    const { rows } = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${user.fid}`;
+                    const result = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${user.fid}`;
+                    const rows = result.rows;
                     if (rows.length > 0) {
                         const currentEthAddresses = rows[0].eth_addresses;
 
@@ -412,12 +417,14 @@ async function fetchBuildScore() {
         return;
     }
     const BATCH_SIZE = 99;
-    const RATE_LIMIT_DELAY = 100; // 10 requests per second
+    const RATE_LIMIT_DELAY = 200; // 10 requests per second
 
     // First process accounts where builder_score is 0 and eth_addresses is null
     let results = await sql`SELECT fid, eth_addresses FROM user_scores WHERE builder_score = 0 AND eth_addresses IS NULL`;
     let rows = results.rows;
 
+    console.log(`PHASE1: Processing ${rows.length} accounts...`);
+    
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
         const batch = rows.slice(i, i + BATCH_SIZE);
 
@@ -452,6 +459,7 @@ async function fetchBuildScore() {
                     const data = await response.json();
                     const score = data.passport?.score || 0;
                     totalBuildScore += score;
+                    console.log(`Build score for address ${address} and fid ${user.fid}: ${score}`)
 
                     // Delay to respect rate limits
                     await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
@@ -461,24 +469,27 @@ async function fetchBuildScore() {
             }
 
             // Fetch current build score from the database
-            const { rows: currentRows } = await sql`SELECT builder_score FROM user_scores WHERE fid = ${user.fid}`;
+            const results = await sql`SELECT builder_score FROM user_scores WHERE fid = ${user.fid}`;
+            const currentRows = results.rows;
             if (currentRows.length > 0) {
                 const currentBuilderScore = currentRows[0].builder_score;
 
                 // Only update if the score has changed
-                if (currentBuilderScore !== totalBuildScore) {
+                if (currentBuilderScore !== totalBuildScore && totalBuildScore > 0) {
                     await sql`UPDATE user_scores SET builder_score = ${totalBuildScore} WHERE fid = ${user.fid}`;
-                    console.log(`Builder score updated successfully for fid ${user.fid}`);
+                    console.log(`Builder score updated successfully for fid ${user.fid} from ${currentBuilderScore} to ${totalBuildScore}`);
                 } else {
-                    console.log(`No change in builder score for fid ${user.fid}`);
+                    console.log(`No change in builder score for fid ${user.fid} after re-fetching, current score: ${currentBuilderScore}, new score: ${totalBuildScore}`);
                 }
             }
         }
     }
 
-    // Then process the rest
-    results = await sql`SELECT fid, eth_addresses FROM user_scores`;
+    // process accounts where builder_score is 0 and eth_addresses is not null
+    results = await sql`SELECT fid, eth_addresses FROM user_scores WHERE builder_score = 0 AND eth_addresses IS NOT NULL`;
     rows = results.rows;
+
+    console.log(`PHASE2: Processing ${rows.length} accounts...`);
 
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
         const batch = rows.slice(i, i + BATCH_SIZE);
@@ -516,6 +527,7 @@ async function fetchBuildScore() {
                     const data = await response.json();
                     const score = data.passport?.score || 0;
                     totalBuildScore += score;
+                    console.log(`Build score for address ${address} and fid ${user.fid}: ${score}`);
 
                     // Delay to respect rate limits
                     await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
@@ -525,16 +537,86 @@ async function fetchBuildScore() {
             }
 
             // Fetch current build score from the database
-            const { rows: currentRows } = await sql`SELECT builder_score FROM user_scores WHERE fid = ${user.fid}`;
+            const result = await sql`SELECT builder_score FROM user_scores WHERE fid = ${user.fid}`;
+            const currentRows = result.rows;
             if (currentRows.length > 0) {
                 const currentBuilderScore = currentRows[0].builder_score;
 
                 // Only update if the score has changed
-                if (currentBuilderScore !== totalBuildScore) {
+                if (currentBuilderScore !== totalBuildScore && totalBuildScore > 0) {
                     await sql`UPDATE user_scores SET builder_score = ${totalBuildScore} WHERE fid = ${user.fid}`;
-                    console.log(`Builder score updated successfully for fid ${user.fid}`);
+                    console.log(`Builder score updated successfully for fid ${user.fid} from ${currentBuilderScore} to ${totalBuildScore}`);
                 } else {
-                    console.log(`No change in builder score for fid ${user.fid}`);
+                    console.log(`No change in builder score for fid ${user.fid}, current score: ${currentBuilderScore}, new score: ${totalBuildScore}`);
+                }
+            }
+        }
+    }
+
+
+    // Then process the rest
+    results = await sql`SELECT fid, eth_addresses FROM user_scores`;
+    rows = results.rows;
+
+    console.log(`PHASE3: Processing ${rows.length} accounts...`);
+
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const batch = rows.slice(i, i + BATCH_SIZE);
+
+        for (const user of batch) {
+            if (!user.eth_addresses) {
+                console.log(`No eth_addresses found for fid ${user.fid}`);
+                // Try to fetch eth addresses for that fid
+                await fetchETHaddressesForFID(user.fid);
+                const result = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${user.fid} AND eth_addresses IS NOT NULL`;
+                if (result.rows.length === 0) {
+                    console.error(`No eth_addresses found for fid ${user.fid} after re-fetching`);
+                    continue;
+                } else {
+                    user.eth_addresses = result.rows[0].eth_addresses;
+                }
+            }
+
+            const ethAddresses = user.eth_addresses.split(',').filter(Boolean);
+            let totalBuildScore = 0;
+
+            for (const address of ethAddresses) {
+                const url = `https://api.talentprotocol.com/api/v2/passports/${address}`;
+
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'X-API-KEY': TALENT_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                };
+
+                try {
+                    const response = await fetch(url, options);
+                    const data = await response.json();
+                    const score = data.passport?.score || 0;
+                    totalBuildScore += score;
+                    console.log(`Build score for address ${address} and fid ${user.fid}: ${score}`);
+
+                    // Delay to respect rate limits
+                    await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+                } catch (e) {
+                    console.error(`Error fetching build score for address ${address}:`, e);
+                }
+            }
+
+            // Fetch current build score from the database
+            const result = await sql`SELECT builder_score FROM user_scores WHERE fid = ${user.fid}`;
+            const currentRows = result.rows;
+            if (currentRows.length > 0) {
+                const currentBuilderScore = currentRows[0].builder_score;
+
+                // Only update if the score has changed
+                if (currentBuilderScore !== totalBuildScore && totalBuildScore > 0) {
+                    await sql`UPDATE user_scores SET builder_score = ${totalBuildScore} WHERE fid = ${user.fid}`;
+                    console.log(`Builder score updated successfully for fid ${user.fid} from ${currentBuilderScore} to ${totalBuildScore}`);
+                } else {
+                    console.log(`No change in builder score for fid ${user.fid}, current score: ${currentBuilderScore}, new score: ${totalBuildScore}`);
                 }
             }
         }
@@ -592,12 +674,13 @@ async function fetchBuildScoreForFID(fid: any) {
     }
 
     // Fetch current build score from the database
-    const { rows: currentRows } = await sql`SELECT builder_score FROM user_scores WHERE fid = ${fid}`;
+    const result = await sql`SELECT builder_score FROM user_scores WHERE fid = ${fid}`;
+    const currentRows = result.rows;
     if (currentRows.length > 0) {
         const currentBuilderScore = currentRows[0].builder_score;
 
         // Only update if the score has changed
-        if (currentBuilderScore !== totalBuildScore) {
+        if (currentBuilderScore !== totalBuildScore && totalBuildScore > 0) {
             await sql`UPDATE user_scores SET builder_score = ${totalBuildScore} WHERE fid = ${fid}`;
             console.log(`Builder score updated successfully for fid ${fid}`);
         } else {
