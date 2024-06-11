@@ -414,7 +414,71 @@ async function fetchBuildScore() {
     const BATCH_SIZE = 99;
     const RATE_LIMIT_DELAY = 100; // 10 requests per second
 
-    let { rows } = await sql`SELECT fid, eth_addresses FROM user_scores`;
+    // First process accounts where builder_score is 0 and eth_addresses is null
+    let results = await sql`SELECT fid, eth_addresses FROM user_scores WHERE builder_score = 0 AND eth_addresses IS NULL`;
+    let rows = results.rows;
+
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const batch = rows.slice(i, i + BATCH_SIZE);
+
+        for (const user of batch) {
+            console.log(`No eth_addresses found for fid ${user.fid}`);
+            // Try to fetch eth addresses for that fid
+            await fetchETHaddressesForFID(user.fid);
+            const result = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${user.fid} AND eth_addresses IS NOT NULL`;
+            if (result.rows.length === 0) {
+                console.error(`No eth_addresses found for fid ${user.fid} after re-fetching`);
+                continue;
+            } else {
+                user.eth_addresses = result.rows[0].eth_addresses;
+            }
+
+            const ethAddresses = user.eth_addresses.split(',').filter(Boolean);
+            let totalBuildScore = 0;
+
+            for (const address of ethAddresses) {
+                const url = `https://api.talentprotocol.com/api/v2/passports/${address}`;
+
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'X-API-KEY': TALENT_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                };
+
+                try {
+                    const response = await fetch(url, options);
+                    const data = await response.json();
+                    const score = data.passport?.score || 0;
+                    totalBuildScore += score;
+
+                    // Delay to respect rate limits
+                    await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+                } catch (e) {
+                    console.error(`Error fetching build score for address ${address}:`, e);
+                }
+            }
+
+            // Fetch current build score from the database
+            const { rows: currentRows } = await sql`SELECT builder_score FROM user_scores WHERE fid = ${user.fid}`;
+            if (currentRows.length > 0) {
+                const currentBuilderScore = currentRows[0].builder_score;
+
+                // Only update if the score has changed
+                if (currentBuilderScore !== totalBuildScore) {
+                    await sql`UPDATE user_scores SET builder_score = ${totalBuildScore} WHERE fid = ${user.fid}`;
+                    console.log(`Builder score updated successfully for fid ${user.fid}`);
+                } else {
+                    console.log(`No change in builder score for fid ${user.fid}`);
+                }
+            }
+        }
+    }
+
+    // Then process the rest
+    results = await sql`SELECT fid, eth_addresses FROM user_scores`;
+    rows = results.rows;
 
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
         const batch = rows.slice(i, i + BATCH_SIZE);
@@ -541,6 +605,7 @@ async function fetchBuildScoreForFID(fid: any) {
 
     return totalBuildScore;
 }
+
 
 
 fetchBuildScore().then(
