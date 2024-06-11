@@ -291,9 +291,13 @@ async function fetchETHaddressesForFID(fid: any) {
             const user = data.users[0];
             const ethAddresses = Array.from(new Set(user.verified_addresses.eth_addresses)).join(',');
 
+            console.log(`ETH addresses for fid ${fid}: ${ethAddresses}`)
+
             // Fetch current eth_addresses from the database
             const results = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid}`;
             const rows = results.rows;
+
+            console.log(`Rows: ${JSON.stringify(rows)}`);
             if (rows.length > 0) {
                 const currentEthAddresses = rows[0].eth_addresses;
 
@@ -305,6 +309,8 @@ async function fetchETHaddressesForFID(fid: any) {
                 } else {
                     console.log(`No change in ETH addresses for fid ${fid}`);
                 }
+            } else {
+                console.error(`No eth_addresses found in the database for fid ${fid}`);
             }
         } else {
             console.error(`No users in response for fid ${fid}:`, data);
