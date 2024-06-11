@@ -70,19 +70,8 @@ async function insertDataIntoDatabase(rows: any) {
 async function filterCasts(rows: any) {
     console.log('Filtering data...');
 
-    // Retrieve the latest cast_timestamp from the powerfeed_replies_filtered table
-    const latestTimestampResult = await sql`
-        SELECT MAX(cast_timestamp) AS latest_timestamp FROM powerfeed_replies_filtered
-    `;
-    const latestTimestamp = latestTimestampResult.rows[0]?.latest_timestamp;
-    console.log('Latest timestamp in database:', latestTimestamp);
-
-    // Filter rows to only include those with a cast_timestamp greater than the latest timestamp
-    const filteredRows = latestTimestamp 
-        ? rows.filter((row: { cast_timestamp: string | number | Date; }) => new Date(row.cast_timestamp) > new Date(latestTimestamp))
-        : rows;
-
-    console.log('Number of new rows to process:', filteredRows.length);
+    // Remove the retrieval of the latest cast_timestamp
+    console.log('Processing all rows without filtering by the latest timestamp.');
 
     const userReplyCount: { [key: string]: { count: number, limit: number } } = {};
     const userCastReplySet: { [key: string]: Set<string> } = {};
@@ -97,11 +86,11 @@ async function filterCasts(rows: any) {
     };
 
     // Sort rows by cast_timestamp to process them from the start of the day
-    filteredRows.sort((a: any, b: any) => new Date(a.cast_timestamp).getTime() - new Date(b.cast_timestamp).getTime());
+    rows.sort((a: any, b: any) => new Date(a.cast_timestamp).getTime() - new Date(b.cast_timestamp).getTime());
 
     const finalFilteredRows = [];
 
-    for (let row of filteredRows) {
+    for (let row of rows) {
         const replyDate = new Date(row.cast_timestamp);
         const dateKey = getAdjustedDateKey(replyDate);
         
@@ -167,6 +156,7 @@ async function filterCasts(rows: any) {
         console.error('Error inserting filtered data:', error);
     }
 }
+
 
 
 
@@ -418,9 +408,9 @@ async function fetchUserData(fid: number) {
 
 
 // execute the functions above 
-retrieveJSON().then(() => {
-    console.log('Script completed');
-});
+// retrieveJSON().then(() => {
+//     console.log('Script completed');
+// });
 
 // calculateAndStorePoints().then(() => {
 //     console.log('Script completed');
