@@ -310,7 +310,13 @@ async function fetchETHaddressesForFID(fid: any) {
                     console.log(`No change in ETH addresses for fid ${fid}`);
                 }
             } else {
-                console.error(`No eth_addresses found in the database for fid ${fid}`);
+                console.log(`No eth_addresses found for fid ${fid}`);
+                // Insert the new eth_addresses
+                if (ethAddresses) {
+                    await sql`INSERT INTO user_scores (fid, eth_addresses) VALUES (${fid}, ${ethAddresses})`;
+                    console.log(`ETH addresses inserted successfully for fid ${fid}`);
+                    return ethAddresses;
+                }
             }
         } else {
             console.error(`No users in response for fid ${fid}:`, data);
