@@ -414,12 +414,25 @@ async function fetchBuildScore() {
     const BATCH_SIZE = 99;
     const RATE_LIMIT_DELAY = 100; // 10 requests per second
 
-    const { rows } = await sql`SELECT fid, eth_addresses FROM user_scores WHERE eth_addresses IS NOT NULL`;
+    let { rows } = await sql`SELECT fid, eth_addresses FROM user_scores`;
 
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
         const batch = rows.slice(i, i + BATCH_SIZE);
 
         for (const user of batch) {
+            if (!user.eth_addresses) {
+                console.log(`No eth_addresses found for fid ${user.fid}`);
+                // Try to fetch eth addresses for that fid
+                await fetchETHaddressesForFID(user.fid);
+                const result = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${user.fid} AND eth_addresses IS NOT NULL`;
+                if (result.rows.length === 0) {
+                    console.error(`No eth_addresses found for fid ${user.fid} after re-fetching`);
+                    continue;
+                } else {
+                    user.eth_addresses = result.rows[0].eth_addresses;
+                }
+            }
+
             const ethAddresses = user.eth_addresses.split(',').filter(Boolean);
             let totalBuildScore = 0;
 
@@ -480,7 +493,7 @@ async function fetchBuildScoreForFID(fid: any) {
         ({ rows } = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid} AND eth_addresses IS NOT NULL`);
 
         if (rows.length === 0) {
-            console.error(`No eth_addresses found for fid ${fid}`);
+            console.error(`again - No eth_addresses found for fid ${fid}`);
             return 0;
         }
     }
@@ -529,9 +542,10 @@ async function fetchBuildScoreForFID(fid: any) {
     return totalBuildScore;
 }
 
-// fetchBuildScore().then(
-//     () => console.log('Build scores updated successfully')
-// );
+
+fetchBuildScore().then(
+    () => console.log('Build scores updated successfully')
+);
 
 
 // fetchPowerScoreGame2().then(
@@ -551,8 +565,8 @@ async function fetchBuildScoreForFID(fid: any) {
 //     console.log('Power users fetched successfully');
 // });
 
-fetchPowerScore('453709').then(
-    (score) => console.log(`Power score: ${JSON.stringify(score)}`)
-);
+// fetchPowerScore('453709').then(
+//     (score) => console.log(`Power score: ${JSON.stringify(score)}`)
+// );
 
 export { fetchPowerUsers, fetchPowerScore, fetchPowerScoreGame2, fetchPowerScoreGame2ForFID, fetchETHaddresses, fetchETHaddressesForFID, fetchETHaddressesForNull, fetchBuildScore, fetchBuildScoreForFID, fetchFids, fetchFidsWithNullEthAddresses};

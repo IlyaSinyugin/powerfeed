@@ -37,8 +37,8 @@ async function retrieveJSON() {
         );
         let data = await response.json();
         await filterCasts(data.query_result.data.rows);
-        await calculateAndStorePoints();
-        await insertDataIntoDatabase(data.query_result.data.rows);
+        //await calculateAndStorePoints();
+        //await insertDataIntoDatabase(data.query_result.data.rows);
     } catch (e) {
         console.error('Error fetching replies:', e);
         return;
@@ -126,7 +126,9 @@ async function filterCasts(rows: any) {
                 }
 
                 userReplyCount[userKey] = { count: 0, limit: limit };
-                console.log(`Initialized userReplyCount for ${userKey}:`, userReplyCount[userKey]);
+                if (row.reply_from_fid === 429107) {
+                    console.log(`Initialized userReplyCount for ${userKey}:`, userReplyCount[userKey]);
+                }
             }
 
             if (!userCastReplySet[userCastKey]) {
@@ -137,8 +139,10 @@ async function filterCasts(rows: any) {
                 finalFilteredRows.push(row);
                 userReplyCount[userKey].count++;
                 userCastReplySet[userCastKey].add(row.cast_hash);
-                console.log(`Added cast ${row.cast_hash} to finalFilteredRows for user ${row.reply_from_fid}`);
-            } else {
+                if (row.reply_from_fid === 429107) {
+                    console.log(`Added cast ${row.cast_hash} to finalFilteredRows for user ${row.reply_from_fid}. Updated count for ${userKey}: ${userReplyCount[userKey].count}`);
+                }
+            } else if (row.reply_from_fid === 429107) {
                 console.log(`Cast ${row.cast_hash} skipped for user ${row.reply_from_fid}: Count ${userReplyCount[userKey].count}, Limit ${userReplyCount[userKey].limit}`);
             }
         }
@@ -404,7 +408,7 @@ async function fetchUserData(fid: number) {
         let score = await fetchPowerScore(fid.toString());
         score = score ? score : 1;
         let builder_score = await fetchBuildScoreForFID(fid.toString());
-        builder_score = builder_score ? builder_score : 1;
+        builder_score = builder_score ? builder_score : 0;
         return { username, pfpUrl, fid, score, builder_score };
     } catch (error) {
         console.error(`Error fetching user data for FID: ${fid}`, error);
