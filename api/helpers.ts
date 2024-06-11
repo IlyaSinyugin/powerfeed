@@ -268,6 +268,7 @@ async function fetchFidsWithNullEthAddresses(): Promise<string[]> {
 }
 
 async function fetchETHaddressesForFID(fid: any) {
+    console.log(`Function of fetchETHaddressesForFID is called with fid ${fid}`);
     const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || 'NEYNAR_API_DOCS';
 
     const options = {
@@ -645,10 +646,12 @@ async function fetchBuildScoreForFID(fid: any) {
     let results = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid} AND eth_addresses IS NOT NULL`;
     let rows = results.rows;
 
+    console.log(`Fetching build score for fid ${fid}... Rows are ${JSON.stringify(rows)}`)
+
     if (rows.length === 0) {
         console.log(`No eth_addresses found for fid ${fid}`);
         // try to find eth addresses for that fid 
-        await fetchETHaddressesForFID(fid);
+        const buildScore = await fetchETHaddressesForFID(fid);
         results = await sql`SELECT eth_addresses FROM user_scores WHERE fid = ${fid} AND eth_addresses IS NOT NULL`;
         rows = results.rows;
 
