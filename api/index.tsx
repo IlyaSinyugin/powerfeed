@@ -101,6 +101,7 @@ app.frame("/", neynarMiddleware, async (c) => {
       // </Box>
       <Image src="https://i.imgur.com/TMelNB7.png" />
     ),
+    title: "Powerfeed",
     intents: [<Button value="checkScore">Check your Power Score</Button>],
   });
 });

@@ -158,7 +158,13 @@ async function filterCasts(rows: any) {
 }
 
 
-
+async function getLatestSavedReactionTimestamp() {
+    const result = await sql`
+        SELECT MAX(cast_timestamp) as latest_timestamp
+        FROM powerfeed_replies_filtered
+    `;
+    return result.rows[0]?.latest_timestamp || null;
+}
 
 
 
@@ -192,10 +198,15 @@ async function calculateAndStorePoints() {
             reactionsReceivedMap[user.fid] = 0;
         });
 
-        console.log('Retrieving all filtered reactions...');
-        // Retrieve all filtered reactions
+        console.log('Retrieving latest saved reaction timestamp...');
+        const latestTimestamp = await getLatestSavedReactionTimestamp();
+        const startDate = latestTimestamp ? new Date(latestTimestamp) : new Date(Date.now() - 86400000); // If no timestamp, start from the previous day
+        startDate.setHours(16, 0, 0, 0); // Set to 16:00 UTC
+    
+        console.log('Retrieving filtered reactions...');
+        // Retrieve filtered reactions starting from the latest timestamp
         const reactionsResult = await sql`
-            SELECT * FROM powerfeed_replies_filtered
+            SELECT * FROM powerfeed_replies_filtered WHERE cast_timestamp > ${startDate.toISOString()}
         `;
         const reactions: any[] = reactionsResult.rows; // Access rows property to get the actual data
 
