@@ -429,9 +429,9 @@ async function runRetrieveJSONLoop() {
     }
 }
 
-runRetrieveJSONLoop().then(() => {
-    console.log('Started JSON retrieval loop.');
-});
+// runRetrieveJSONLoop().then(() => {
+//     console.log('Started JSON retrieval loop.');
+// });
 
 
 
