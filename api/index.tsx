@@ -6,7 +6,12 @@ import { neynar, type NeynarVariables } from "frog/middlewares";
 // import { neynar } from 'frog/hubs'
 import { handle } from "frog/vercel";
 import crypto from "crypto";
-import { fetchPowerScore, fetchPowerScoreGame2ForFID, fetchBuildScoreForFID, syncETHAddresses } from "./helpers.js";
+import {
+  fetchPowerScore,
+  fetchPowerScoreGame2ForFID,
+  fetchBuildScoreForFID,
+  syncETHAddresses,
+} from "./helpers.js";
 import {
   Row,
   Rows,
@@ -69,37 +74,8 @@ app.frame("/", neynarMiddleware, async (c) => {
   return c.res({
     action: `/score/${randomHash}`,
     image: (
-      // <Box
-      //   grow
-      //   alignHorizontal="left"
-      //   backgroundColor="background"
-      //   padding="34"
-      // >
-      //   <HStack gap="22">
-      //     <VStack gap="4">
-      //       <Text color="white" size="24" decoration="solid" weight="800">
-      //         Engagement is nice, but
-      //       </Text>
-      //       <Text color="white" size="24" decoration="solid" weight="900">
-      //         what's your real
-      //       </Text>
-      //       <Text color="green" size="24" decoration="solid" weight="900">
-      //         Farcaster Power?
-      //       </Text>
-      //     </VStack>
-      //     <Box
-      //       backgroundColor="background"
-      //       alignHorizontal="right"
-      //       alignVertical="bottom"
-      //       height="256"
-      //       width="192"
-      //       overflow="hidden"
-      //     >
-      //       <Image width="192" height="160" src="/img1.png" />
-      //     </Box>
-      //   </HStack>
-      // </Box>
-      <Image src="https://i.imgur.com/TMelNB7.png" />
+      //<Image src="https://i.imgur.com/TMelNB7.png" />
+      <Image src="https://i.imgur.com/c6rBJMX.png" />
     ),
     title: "Powerfeed",
     intents: [<Button value="checkScore">Check your Power Score</Button>],
@@ -142,9 +118,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         "Hash exists in the database but interactor fid is not equal to the fid from the database"
       );
       ({ username, pfpUrl, fid } = c.var.interactor || {});
-      console.log(
-        `INTERACTOR DATA Username: ${username}, FID: ${fid}`
-      );
+      console.log(`INTERACTOR DATA Username: ${username}, FID: ${fid}`);
       // check if that fid is already in the table
       // game 1 settings
       // const existingFid = await sql`
@@ -166,15 +140,17 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         score = existingFid.rows[0].score_game2;
         if (existingFid.rows[0].builder_score !== null) {
           buildScore = existingFid.rows[0].builder_score;
-          console.log(`Build score is not null for fid ${fid}, buildScore: ${buildScore}`)
+          console.log(
+            `Build score is not null for fid ${fid}, buildScore: ${buildScore}`
+          );
         } else {
           console.log(`Build score is null for fid ${fid}`);
-          // fetching build score for this fid 
+          // fetching build score for this fid
           buildScore = await fetchBuildScoreForFID(fid);
-          console.log(`Build score fetched for fid ${fid} is ${buildScore}`)
+          console.log(`Build score fetched for fid ${fid} is ${buildScore}`);
         }
         if (existingFid.rows[0].score_game2 === null) {
-          console.log(`Score game 2 is null for fid ${fid}`)
+          console.log(`Score game 2 is null for fid ${fid}`);
           // fetch score for this fid
           try {
             score = await fetchPowerScore(fid);
@@ -194,6 +170,21 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           SET hash = ${hash}
           WHERE fid = ${fid}
         `;
+
+        const hashPointsData = await sql`
+          SELECT hash
+          FROM user_points
+          WHERE fid = ${fid}
+        `;
+        let hashPoints;
+        if (hashPointsData.rows.length > 0) {
+          console.log(
+            `Hash points for fid ${fid} exists, hashPointsData: ${hashPointsData.rows[0].hash}`
+          );
+          hashPoints = hashPointsData.rows[0].hash;
+        } else {
+          hashPoints = await generateRandomHash();
+        }
         console.log(
           `Existing data & generated hash: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, buildScore: ${buildScore}, hash: ${hash}`
         );
@@ -203,84 +194,6 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
 
         return c.res({
           image: (
-            // game 1
-            // <Rows gap="1" grow>
-            //   <Row backgroundColor="background" height="2/7" />
-            //   <Divider color="green" />
-            //   <Row
-            //     backgroundColor="background"
-            //     height="3/7"
-            //     alignHorizontal="left"
-            //     alignVertical="center"
-            //     padding="16"
-            //   >
-            //     <HStack
-            //       gap="18"
-            //       alignHorizontal="center"
-            //       alignVertical="center"
-            //     >
-            //       <img
-            //         //src="https://imgur.com/WImxm1D.jpeg"
-            //         src={pfpUrl}
-            //         width="128"
-            //         height="128"
-            //         style={{
-            //           borderRadius: "0%",
-            //           border: "3.5px solid #B1FC5A",
-            //         }}
-            //       />
-            //       <VStack gap="1">
-            //         <Text
-            //           color="white"
-            //           size="18"
-            //           decoration="solid"
-            //           weight="800"
-            //           wrap="balance"
-            //         >
-            //           {username}
-            //         </Text>
-            //         <Text
-            //           color="green"
-            //           size="18"
-            //           decoration="solid"
-            //           weight="800"
-            //         >
-            //           got the power!
-            //         </Text>
-            //       </VStack>
-            //       <Spacer size="72" />
-            //       <Box
-            //         fontSize="18"
-            //         color="white"
-            //         fontStyle="JetBrains Mono"
-            //         fontFamily="default"
-            //         fontWeight="800"
-            //         alignContent="center"
-            //         alignVertical="center"
-            //         paddingBottom="14"
-            //         flexWrap="nowrap"
-            //         display="flex"
-            //       >
-            //         Power Score: {score}
-            //       </Box>
-            //     </HStack>
-            //   </Row>
-            //   <Divider color="green" />
-            //   <Row
-            //     backgroundColor="background"
-            //     height="3/7"
-            //     alignHorizontal="right"
-            //     paddingLeft="16"
-            //     paddingRight="16"
-            //     paddingTop="22"
-            //     textAlign="center"
-            //   >
-            //     <Text color="white" size="20" decoration="solid" weight="800">
-            //       Power Score = power users engaged with your casts last week.
-            //       Use it to give and earn $power in the /powerfeed game!
-            //     </Text>
-            //   </Row>
-            // </Rows>
             <Rows gap="1" grow>
               <Image src="/powergame2title.png" />
               <Divider color="green" />
@@ -331,7 +244,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                       🛠️Builder score: {buildScore}
                     </Text>
                     <Text color="white" size="18">
-                      💰points per⚡️: {((Number(score)+Number(buildScore))*10).toString()}
+                      💰points per⚡️:{" "}
+                      {((Number(score) + Number(buildScore)) * 10).toString()}
                     </Text>
                   </Box>
                 </HStack>
@@ -345,8 +259,11 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
             <Button action={`/`} value="checkScore">
               Refresh
             </Button>,
+            <Button action={`/stats/${hashPoints}`} value="checkStats">
+              Stats
+            </Button>,
             <Button action="/gamerules" value="joinGame">
-              Play
+              Rules
             </Button>,
           ],
         });
@@ -357,7 +274,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         const fetchScore = async () => {
           //scoreData = await fetchPowerScore(fid?.toString());
           score = await fetchPowerScore(fid?.toString());
-          // fetch buildScore too 
+          // fetch buildScore too
           buildScore = await fetchBuildScoreForFID(fid);
           await syncETHAddresses(fid);
         };
@@ -369,71 +286,23 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         } catch (e) {
           return c.res({
             action: `/score/${hash}`,
-            image: (
-              // <Box
-              //   grow
-              //   alignHorizontal="left"
-              //   backgroundColor="background"
-              //   padding="34"
-              // >
-              //   <HStack gap="22">
-              //     <VStack gap="4">
-              //       <Text
-              //         color="white"
-              //         size="24"
-              //         decoration="solid"
-              //         weight="800"
-              //       >
-              //         Engagement is nice, but
-              //       </Text>
-              //       <Text
-              //         color="white"
-              //         size="24"
-              //         decoration="solid"
-              //         weight="900"
-              //       >
-              //         what's your real
-              //       </Text>
-              //       <Text
-              //         color="green"
-              //         size="24"
-              //         decoration="solid"
-              //         weight="900"
-              //       >
-              //         Farcaster Power?
-              //       </Text>
-              //     </VStack>
-              //     <Box
-              //       backgroundColor="background"
-              //       alignHorizontal="right"
-              //       alignVertical="bottom"
-              //       height="256"
-              //       width="192"
-              //       overflow="hidden"
-              //     >
-              //       <Image width="192" height="160" src="/img1.png" />
-              //     </Box>
-              //   </HStack>
-              // </Box>
-              <Image src="https://i.imgur.com/TMelNB7.png" />
-
-            ),
+            image: <Image src="https://i.imgur.com/c6rBJMX.png" />,
             intents: [
               <Button value="checkScore">Check your Power Score</Button>,
             ],
           });
         }
         //score = scoreData?.data.rows[0]?.power_score || 1;
-        score = score? score : 1;
-        buildScore = buildScore? buildScore : 0;
+        score = score ? score : 1;
+        buildScore = buildScore ? buildScore : 0;
         if (score < 0 || score === 0) {
           score = 1;
         }
         // Insert the new data into the database
-      //   await sql`
-      //   INSERT INTO user_scores (username, pfpurl, fid, score, hash)
-      //   VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
-      // `;
+        //   await sql`
+        //   INSERT INTO user_scores (username, pfpurl, fid, score, hash)
+        //   VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
+        // `;
         await sql`
         INSERT INTO user_scores (username, pfpurl, fid, score_game2, builder_score, hash)
         VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${buildScore}, ${hash})
@@ -443,154 +312,95 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         );
         await syncETHAddresses(fid);
 
-        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        const hashPointsData = await sql`
+        SELECT hash
+        FROM user_points
+        WHERE fid = ${fid}
+      `;
+        let hashPoints;
+        if (hashPointsData.rows.length > 0) {
+          console.log(
+            `Hash points for fid ${fid} exists, hashPointsData: ${hashPointsData.rows[0].hash}`
+          );
+          hashPoints = hashPointsData.rows[0].hash;
+        } else {
+          hashPoints = await generateRandomHash();
+        }
 
+        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
         return c.res({
           image: (
-            // <Rows gap="1" grow>
-            //   <Row backgroundColor="background" height="2/7" />
-            //   <Divider color="green" />
-            //   <Row
-            //     backgroundColor="background"
-            //     height="3/7"
-            //     alignHorizontal="left"
-            //     alignVertical="center"
-            //     padding="16"
-            //   >
-            //     <HStack
-            //       gap="18"
-            //       alignHorizontal="center"
-            //       alignVertical="center"
-            //     >
-            //       <img
-            //         //src="https://imgur.com/WImxm1D.jpeg"
-            //         src={pfpUrl}
-            //         width="128"
-            //         height="128"
-            //         style={{
-            //           borderRadius: "0%",
-            //           border: "3.5px solid #B1FC5A",
-            //         }}
-            //       />
-            //       <VStack gap="1">
-            //         <Text
-            //           color="white"
-            //           size="18"
-            //           decoration="solid"
-            //           weight="800"
-            //           wrap="balance"
-            //         >
-            //           {username}
-            //         </Text>
-            //         <Text
-            //           color="green"
-            //           size="18"
-            //           decoration="solid"
-            //           weight="800"
-            //         >
-            //           got the power!
-            //         </Text>
-            //       </VStack>
-            //       <Spacer size="72" />
-            //       <Box
-            //         fontSize="18"
-            //         color="white"
-            //         fontStyle="JetBrains Mono"
-            //         fontFamily="default"
-            //         fontWeight="800"
-            //         alignContent="center"
-            //         alignVertical="center"
-            //         paddingBottom="14"
-            //         flexWrap="nowrap"
-            //         display="flex"
-            //       >
-            //         Power Score: {score}
-            //       </Box>
-            //     </HStack>
-            //   </Row>
-            //   <Divider color="green" />
-            //   <Row
-            //     backgroundColor="background"
-            //     height="3/7"
-            //     alignHorizontal="right"
-            //     paddingLeft="16"
-            //     paddingRight="16"
-            //     paddingTop="22"
-            //     textAlign="center"
-            //   >
-            //     <Text color="white" size="20" decoration="solid" weight="800">
-            //       Power Score = power users engaged with your casts last week.
-            //       Use it to give and earn $power in the /powerfeed game!
-            //     </Text>
-            //   </Row>
-            // </Rows>
             <Rows gap="1" grow>
-            <Image src="/powergame2title.png" />
-            <Divider color="green" />
-            <Row
-              backgroundColor="background"
-              height="3/5"
-              alignHorizontal="left"
-              alignVertical="center"
-              padding="16"
-              grow
-            >
-              <HStack
-                gap="18"
-                alignHorizontal="center"
+              <Image src="/powergame2title.png" />
+              <Divider color="green" />
+              <Row
+                backgroundColor="background"
+                height="3/5"
+                alignHorizontal="left"
                 alignVertical="center"
+                padding="16"
+                grow
               >
-                <img
-                  //src="https://i.imgur.com/WImxm1D.jpeg"
-                  src={pfpUrl}
-                  width="128"
-                  height="128"
-                  style={{
-                    borderRadius: "0%",
-                    border: "3.5px solid #B1FC5A",
-                  }}
-                />
-                <VStack gap="1">
-                  <Text color="white" size="18" weight="800" wrap="balance">
-                    {username}
-                  </Text>
-                  <Text color="green" size="18" weight="800">
-                    got the power!
-                  </Text>
-                </VStack>
-                <Spacer size="72" />
-                <Box
-                  fontSize="18"
-                  alignContent="center"
+                <HStack
+                  gap="18"
+                  alignHorizontal="center"
                   alignVertical="center"
-                  paddingBottom="14"
-                  flexWrap="nowrap"
-                  display="flex"
                 >
-                  <Text color="white" size="18" wrap="balance">
-                    ⚡️Power score: {score}
-                  </Text>
-                  <Text color="white" size="18">
-                    🛠️Builder score: {buildScore.toString()}
-                  </Text>
-                  <Text color="white" size="18">
-                    💰points per⚡️: {((Number(score)+Number(buildScore))*10).toString()}
-                  </Text>
-                </Box>
-              </HStack>
-            </Row>
-            <Divider color="green" />
-            <Image src="/powergame2bottom.png" />
-          </Rows>
+                  <img
+                    //src="https://i.imgur.com/WImxm1D.jpeg"
+                    src={pfpUrl}
+                    width="128"
+                    height="128"
+                    style={{
+                      borderRadius: "0%",
+                      border: "3.5px solid #B1FC5A",
+                    }}
+                  />
+                  <VStack gap="1">
+                    <Text color="white" size="18" weight="800" wrap="balance">
+                      {username}
+                    </Text>
+                    <Text color="green" size="18" weight="800">
+                      got the power!
+                    </Text>
+                  </VStack>
+                  <Spacer size="72" />
+                  <Box
+                    fontSize="18"
+                    alignContent="center"
+                    alignVertical="center"
+                    paddingBottom="14"
+                    flexWrap="nowrap"
+                    display="flex"
+                  >
+                    <Text color="white" size="18" wrap="balance">
+                      ⚡️Power score: {score}
+                    </Text>
+                    <Text color="white" size="18">
+                      🛠️Builder score: {buildScore.toString()}
+                    </Text>
+                    <Text color="white" size="18">
+                      💰points per⚡️:{" "}
+                      {((Number(score) + Number(buildScore)) * 10).toString()}
+                    </Text>
+                  </Box>
+                </HStack>
+              </Row>
+              <Divider color="green" />
+              <Image src="/powergame2bottom.png" />
+            </Rows>
           ),
           intents: [
             <Button.Link href={shareUrl}>Share</Button.Link>,
             <Button action={`/`} value="checkScore">
               Refresh
             </Button>,
+            <Button action={`/stats/${hashPoints}`} value="checkStats">
+              Stats
+            </Button>,
             <Button action="/gamerules" value="joinGame">
-              Play
+              Rules
             </Button>,
           ],
         });
@@ -606,7 +416,13 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
 
   if (existingData.rows.length > 0) {
     // If the hash exists, retrieve the data
-    ({ username, pfpurl: pfpUrl, fid, score_game2: score, builder_score: buildScore } = existingData.rows[0]);
+    ({
+      username,
+      pfpurl: pfpUrl,
+      fid,
+      score_game2: score,
+      builder_score: buildScore,
+    } = existingData.rows[0]);
     console.log(
       `Hash already exists with username ${username} and score ${score}`
     );
@@ -621,26 +437,28 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       WHERE fid = ${fid}
     `;
     if (existingFid.rows.length > 0) {
-      console.log(`The fid ${fid} is already in the table`)
+      console.log(`The fid ${fid} is already in the table`);
       // set score
       if (existingFid.rows[0].score_game2 === null) {
         // fetch score for this fid
-          console.log(`Score game 2 is null for fid ${fid}`)
-          // fetch score for this fid
-          try {
-            score = await fetchPowerScore(fid);
-            if (score === null) {
-              console.log(`Hardcoding old score for fid ${fid}, the old score is ${existingFid.rows[0].score}`);
-              score = existingFid.rows[0].score;
-            }
-          } catch (e) {
-            console.log(`Hardcoding old score for fid ${fid}`);
+        console.log(`Score game 2 is null for fid ${fid}`);
+        // fetch score for this fid
+        try {
+          score = await fetchPowerScore(fid);
+          if (score === null) {
+            console.log(
+              `Hardcoding old score for fid ${fid}, the old score is ${existingFid.rows[0].score}`
+            );
             score = existingFid.rows[0].score;
           }
-          if (score < 0 || score === 0) {
-            score = 1;
-          }
-      
+        } catch (e) {
+          console.log(`Hardcoding old score for fid ${fid}`);
+          score = existingFid.rows[0].score;
+        }
+        if (score < 0 || score === 0) {
+          score = 1;
+        }
+
         if (score < 0 || score === 0) {
           score = 1;
         }
@@ -671,43 +489,11 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       } catch (e) {
         return c.res({
           action: `/score/${hash}`,
-          image: (
-            // <Box
-            //   grow
-            //   alignHorizontal="left"
-            //   backgroundColor="background"
-            //   padding="34"
-            // >
-            //   <HStack gap="22">
-            //     <VStack gap="4">
-            //       <Text color="white" size="24" decoration="solid" weight="800">
-            //         Engagement is nice, but
-            //       </Text>
-            //       <Text color="white" size="24" decoration="solid" weight="900">
-            //         what's your real
-            //       </Text>
-            //       <Text color="green" size="24" decoration="solid" weight="900">
-            //         Farcaster Power?
-            //       </Text>
-            //     </VStack>
-            //     <Box
-            //       backgroundColor="background"
-            //       alignHorizontal="right"
-            //       alignVertical="bottom"
-            //       height="256"
-            //       width="192"
-            //       overflow="hidden"
-            //     >
-            //       <Image width="192" height="160" src="/img1.png" />
-            //     </Box>
-            //   </HStack>
-            // </Box>
-            <Image src="https://i.imgur.com/TMelNB7.png" />
-          ),
+          image: <Image src="https://i.imgur.com/c6rBJMX.png" />,
           intents: [<Button value="checkScore">Check your Power Score</Button>],
         });
       }
-      score = score? score : 1;
+      score = score ? score : 1;
       if (score < 0 || score === 0) {
         score = 1;
       }
@@ -717,151 +503,96 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${buildScore}, ${hash})
     `;
       await syncETHAddresses(fid);
-
     }
   }
   const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
+  console.log(
+    `Username: ${username}, FID: ${fid}, Score: ${score}, Build Score: ${buildScore} `
+  );
 
-
-  console.log(`Username: ${username}, FID: ${fid}, Score: ${score}, Build Score: ${buildScore} `);
-
+  const hashPointsData = await sql`
+  SELECT hash
+  FROM user_points
+  WHERE fid = ${fid}
+`;
+  let hashPoints;
+  if (hashPointsData.rows.length > 0) {
+    console.log(
+      `Hash points for fid ${fid} exists, hashPointsData: ${hashPointsData.rows[0].hash}`
+    );
+    hashPoints = hashPointsData.rows[0].hash;
+  } else {
+    hashPoints = await generateRandomHash();
+  }
   return c.res({
     image: (
-      // <Rows gap="1" grow>
-      //   <Row backgroundColor="background" height="2/7" />
-      //   <Divider color="green" />
-      //   <Row
-      //     backgroundColor="background"
-      //     height="3/7"
-      //     alignHorizontal="left"
-      //     alignVertical="center"
-      //     padding="16"
-      //   >
-      //     <HStack gap="18" alignHorizontal="center" alignVertical="center">
-      //       <img
-      //         //src="https://imgur.com/WImxm1D.jpeg"
-      //         src={pfpUrl}
-      //         width="128"
-      //         height="128"
-      //         style={{
-      //           borderRadius: "0%",
-      //           border: "3.5px solid #B1FC5A",
-      //         }}
-      //       />
-      //       <VStack gap="1">
-      //         <Text
-      //           color="white"
-      //           size="18"
-      //           decoration="solid"
-      //           weight="800"
-      //           wrap="balance"
-      //         >
-      //           {username}
-      //         </Text>
-      //         <Text color="green" size="18" decoration="solid" weight="800">
-      //           got the power!
-      //         </Text>
-      //       </VStack>
-      //       <Spacer size="72" />
-      //       <Box
-      //         fontSize="18"
-      //         color="white"
-      //         fontStyle="JetBrains Mono"
-      //         fontFamily="default"
-      //         fontWeight="800"
-      //         alignContent="center"
-      //         alignVertical="center"
-      //         paddingBottom="14"
-      //         flexWrap="nowrap"
-      //         display="flex"
-      //       >
-      //         Power Score: {score}
-      //       </Box>
-      //     </HStack>
-      //   </Row>
-      //   <Divider color="green" />
-      //   <Row
-      //     backgroundColor="background"
-      //     height="3/7"
-      //     alignHorizontal="right"
-      //     paddingLeft="16"
-      //     paddingRight="16"
-      //     paddingTop="22"
-      //     textAlign="center"
-      //   >
-      //     <Text color="white" size="20" decoration="solid" weight="800">
-      //       Power Score = power users engaged with your casts last week. Use it
-      //       to give and earn $power in the /powerfeed game!
-      //     </Text>
-      //   </Row>
-      // </Rows>
       <Rows gap="1" grow>
-      <Image src="/powergame2title.png" />
-      <Divider color="green" />
-      <Row
-        backgroundColor="background"
-        height="3/5"
-        alignHorizontal="left"
-        alignVertical="center"
-        padding="16"
-        grow
-      >
-        <HStack
-          gap="18"
-          alignHorizontal="center"
+        <Image src="/powergame2title.png" />
+        <Divider color="green" />
+        <Row
+          backgroundColor="background"
+          height="3/5"
+          alignHorizontal="left"
           alignVertical="center"
+          padding="16"
+          grow
         >
-          <img
-            //src="https://i.imgur.com/WImxm1D.jpeg"
-            src={pfpUrl}
-            width="128"
-            height="128"
-            style={{
-              borderRadius: "0%",
-              border: "3.5px solid #B1FC5A",
-            }}
-          />
-          <VStack gap="1">
-            <Text color="white" size="18" weight="800" wrap="balance">
-              {username}
-            </Text>
-            <Text color="green" size="18" weight="800">
-              got the power!
-            </Text>
-          </VStack>
-          <Spacer size="72" />
-          <Box
-            fontSize="18"
-            alignContent="center"
-            alignVertical="center"
-            paddingBottom="14"
-            flexWrap="nowrap"
-            display="flex"
-          >
-            <Text color="white" size="18" wrap="balance">
-              ⚡️Power score: {score}
-            </Text>
-            <Text color="white" size="18">
-              🛠️Builder score: {buildScore.toString()}
-            </Text>
-            <Text color="white" size="18">
-              💰points per⚡️: {((Number(score)+Number(buildScore))*10).toString()}
-            </Text>
-          </Box>
-        </HStack>
-      </Row>
-      <Divider color="green" />
-      <Image src="/powergame2bottom.png" />
-    </Rows>
+          <HStack gap="18" alignHorizontal="center" alignVertical="center">
+            <img
+              //src="https://i.imgur.com/WImxm1D.jpeg"
+              src={pfpUrl}
+              width="128"
+              height="128"
+              style={{
+                borderRadius: "0%",
+                border: "3.5px solid #B1FC5A",
+              }}
+            />
+            <VStack gap="1">
+              <Text color="white" size="18" weight="800" wrap="balance">
+                {username}
+              </Text>
+              <Text color="green" size="18" weight="800">
+                got the power!
+              </Text>
+            </VStack>
+            <Spacer size="72" />
+            <Box
+              fontSize="18"
+              alignContent="center"
+              alignVertical="center"
+              paddingBottom="14"
+              flexWrap="nowrap"
+              display="flex"
+            >
+              <Text color="white" size="18" wrap="balance">
+                ⚡️Power score: {score}
+              </Text>
+              <Text color="white" size="18">
+                🛠️Builder score: {buildScore.toString()}
+              </Text>
+              <Text color="white" size="18">
+                💰points per⚡️:{" "}
+                {((Number(score) + Number(buildScore)) * 10).toString()}
+              </Text>
+            </Box>
+          </HStack>
+        </Row>
+        <Divider color="green" />
+        <Image src="/powergame2bottom.png" />
+      </Rows>
     ),
     intents: [
       <Button.Link href={shareUrl}>Share</Button.Link>,
       <Button action={`/`} value="checkScore">
         Refresh
       </Button>,
+      <Button action={`/stats/${hashPoints}`} value="checkStats">
+        Stats
+      </Button>,
       <Button action="/gamerules" value="joinGame">
-        Play
+        Rules
       </Button>,
     ],
   });
@@ -898,35 +629,39 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
       // game 1 rules
       //image: "https://i.imgur.com/hxX85GY.png",
       // game 2 rules
-      image: "https://i.imgur.com/ZzH3XTc.png",
+      image: "https://i.imgur.com/XDpXQbH.png",
       //imageAspectRatio: "1.91:1",
       intents: [
-        <Button.Link href="https://warpcast.com/~/channel/powerfeed">
-          /powerfeed
-        </Button.Link>,
-        <Button value="score" action={`/score/${hashScore}`}>
-          Score
+        // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
+        //   /powerfeed
+        // </Button.Link>,
+        // <Button value="score" action={`/score/${hashScore}`}>
+        //   Score
+        // </Button>,
+        // <Button action={`/stats/${hash}`}>Stats</Button>,
+        <Button value="rules" action="/">
+          Back
         </Button>,
-        <Button action={`/stats/${hash}`}>Stats</Button>,
-        <Button value="rules" action='/rules'>Rules</Button>
       ],
     });
   } else {
     return c.res({
       action: "/gamerules",
-      image: "https://i.imgur.com/ZzH3XTc.png",
+      image: "https://i.imgur.com/XDpXQbH.png",
       //imageAspectRatio: "1.91:1",
       intents: [
-        <Button.Link href="https://warpcast.com/~/channel/powerfeed">
-          /powerfeed
-        </Button.Link>,
-        <Button value="score" action={`/score/${hashScore}`}>
-          Score
+        // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
+        //   /powerfeed
+        // </Button.Link>,
+        // <Button value="score" action={`/score/${hashScore}`}>
+        //   Score
+        // </Button>,
+        // <Button value="points" action={`/stats/${randomHash}`}>
+        //   Stats
+        // </Button>,
+        <Button value="rules" action="/">
+          Back
         </Button>,
-        <Button value="points" action={`/stats/${randomHash}`}>
-          Stats
-        </Button>,
-        <Button value="rules" action='/rules'>Rules</Button>
       ],
     });
   }
@@ -983,7 +718,6 @@ app.frame("/rules", neynarMiddleware, async (c) => {
       </Button>,
     ],
   });
-
 });
 
 // new frame called stats with id
@@ -1110,7 +844,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             <Button.Link href={shareUrl}>Share</Button.Link>,
             <Button value="checkScore">Refresh</Button>,
             <Button action="/gamerules" value="joinGame">
-              Play
+              Rules
             </Button>,
           ],
         });
@@ -1185,7 +919,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           intents: [
             <Button value="checkScore">Refresh</Button>,
             <Button action="/gamerules" value="joinGame">
-              Play
+              Rules
             </Button>,
           ],
         });
@@ -1314,7 +1048,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
         <Button.Link href={shareUrl}>Share</Button.Link>,
         <Button value="checkScore">Refresh</Button>,
         <Button action="/gamerules" value="joinGame">
-          Play
+          Rules
         </Button>,
       ],
     });
@@ -1395,7 +1129,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
       <Button.Link href={shareUrl}>Share</Button.Link>,
       <Button value="checkScore">Refresh</Button>,
       <Button action="/gamerules" value="joinGame">
-        Play
+        Rules
       </Button>,
     ],
   });

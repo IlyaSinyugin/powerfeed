@@ -37,7 +37,7 @@ async function retrieveJSON() {
         );
         let data = await response.json();
         await filterCasts(data.query_result.data.rows);
-        //await calculateAndStorePoints();
+        await calculateAndStorePoints();
         //await insertDataIntoDatabase(data.query_result.data.rows);
     } catch (e) {
         console.error('Error fetching replies:', e);
@@ -340,6 +340,8 @@ async function calculateAndStorePoints() {
                     `;
                     if (existingPointsResult.rows.length > 0) {
                         const existingPoints = existingPointsResult.rows[0].points;
+                        console.log(`Existing points for user ${username}:`, existingPointsResult.rows[0])
+                        console.log(`Calculated points for user ${username}:`, { points, reactionsSent, reactionsReceived });
                         if (existingPoints !== points && points > 0) {
                             const hash = await generateRandomHash();
                             // Update points and hash if they differ
@@ -416,20 +418,20 @@ async function fetchUserData(fid: number) {
     }
 }
 
-// function delay(ms: any) {
-//     return new Promise(resolve => setTimeout(resolve, ms));
-// }
+function delay(ms: any) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-// async function runRetrieveJSONLoop() {
-//     while (true) {
-//         await retrieveJSON();
-//         await delay(60000); // Adjust the delay as needed (60000ms = 1 minute)
-//     }
-// }
+async function runRetrieveJSONLoop() {
+    while (true) {
+        await retrieveJSON();
+        await delay(60000); // Adjust the delay as needed (60000ms = 1 minute)
+    }
+}
 
-// runRetrieveJSONLoop().then(() => {
-//     console.log('Started JSON retrieval loop.');
-// });
+runRetrieveJSONLoop().then(() => {
+    console.log('Started JSON retrieval loop.');
+});
 
 
 
