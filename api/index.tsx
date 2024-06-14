@@ -629,7 +629,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
       // game 1 rules
       //image: "https://i.imgur.com/hxX85GY.png",
       // game 2 rules
-      image: "https://i.imgur.com/XDpXQbH.png",
+      image: "https://i.imgur.com/UMwnEuG.png",
       //imageAspectRatio: "1.91:1",
       intents: [
         // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
@@ -647,7 +647,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
   } else {
     return c.res({
       action: "/gamerules",
-      image: "https://i.imgur.com/XDpXQbH.png",
+      image: "https://i.imgur.com/UMwnEuG.png",
       //imageAspectRatio: "1.91:1",
       intents: [
         // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
@@ -710,7 +710,7 @@ app.frame("/rules", neynarMiddleware, async (c) => {
   // get the fid, username of the interactor
   return c.res({
     action: "/soon",
-    image: "https://i.imgur.com/XDpXQbH.png",
+    image: "https://i.imgur.com/UMwnEuG.png",
     //imageAspectRatio: "1.91:1",
     intents: [
       <Button value="backbutton" action={`/gamerules`}>
