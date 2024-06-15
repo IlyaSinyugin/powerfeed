@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import powerUsersFids from './powerUsersFids.json' with { type: "json" };
 // import dictionary
-import { fetchPowerScore, fetchBuildScoreForFID } from "./helpers.js";
+import { fetchPowerScore, fetchBuildScoreForFID, syncETHAddresses } from "./helpers.js";
 import { sql } from "@vercel/postgres";
 import crypto from "crypto";
 
@@ -36,7 +36,7 @@ async function retrieveJSON() {
             }
         );
         let data = await response.json();
-        await filterCasts(data.query_result.data.rows);
+       //await filterCasts(data.query_result.data.rows);
         await calculateAndStorePoints();
         //await insertDataIntoDatabase(data.query_result.data.rows);
     } catch (e) {
@@ -198,21 +198,39 @@ async function calculateAndStorePoints() {
             reactionsReceivedMap[user.fid] = 0;
         });
 
-        console.log('Retrieving latest saved reaction timestamp...');
-        const latestTimestamp = await getLatestSavedReactionTimestamp();
-        const startDate = latestTimestamp ? new Date(latestTimestamp) : new Date(Date.now() - 86400000); // If no timestamp, start from the previous day
-        startDate.setHours(16, 0, 0, 0); // Set to 16:00 UTC
+        // console.log('Retrieving latest saved reaction timestamp...');
+        // const latestTimestamp = await getLatestSavedReactionTimestamp();
+        // const startDate = latestTimestamp ? new Date(latestTimestamp) : new Date(Date.now() - 86400000); // If no timestamp, start from the previous day
+        // startDate.setHours(16, 0, 0, 0); // Set to 16:00 UTC
     
-        console.log('Retrieving filtered reactions...');
+        // console.log('Retrieving filtered reactions...');
         // Retrieve filtered reactions starting from the latest timestamp
-        const reactionsResult = await sql`
-            SELECT * FROM powerfeed_replies_filtered WHERE cast_timestamp > ${startDate.toISOString()}
-        `;
-        const reactions: any[] = reactionsResult.rows; // Access rows property to get the actual data
+
+        // const reactionsResult = await sql`
+        //     SELECT * FROM powerfeed_replies_filtered WHERE cast_timestamp > ${startDate.toISOString()}
+        // `;
+        console.log('Retrieving filtered reactions...');
+        let offset = 0;
+        const limit = 10000;
+        let allReactions: any[] = [];
+        let reactionsBatch: any[];
+
+        do {
+            const reactionsResult = await sql`
+                SELECT * FROM powerfeed_replies_filtered 
+                ORDER BY cast_timestamp
+                LIMIT ${limit}
+                OFFSET ${offset}
+            `;
+            reactionsBatch = reactionsResult.rows;
+            allReactions = allReactions.concat(reactionsBatch);
+            offset += limit;
+        } while (reactionsBatch.length === limit);
+        console.log(`Total reactions received: ${allReactions.length}`);
 
         console.log('Processing reactions...');
         // Process each reaction and ensure users are in the user_scores table
-        for (const reaction of reactions) {
+        for (const reaction of allReactions) {
             const replyFromFid = reaction.reply_from_fid;
             const replyToFid = reaction.reply_to_fid;
 
@@ -250,6 +268,7 @@ async function calculateAndStorePoints() {
                             VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
+                        await syncETHAddresses(fid);
                     }
                 }
             }
@@ -288,6 +307,7 @@ async function calculateAndStorePoints() {
                             VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
+                        await syncETHAddresses(fid);
                     }
                 }
             }
