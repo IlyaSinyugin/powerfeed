@@ -25,6 +25,8 @@ import {
   Spacer,
 } from "./ui.js";
 
+import powerUsersFids from './powerUsersFids.json' with { type: "json" };
+
 // define a dictionary which will store the fid and score
 let fidScore: { [key: string]: number } = {};
 
@@ -75,7 +77,8 @@ app.frame("/", neynarMiddleware, async (c) => {
     action: `/score/${randomHash}`,
     image: (
       //<Image src="https://i.imgur.com/TMelNB7.png" />
-      <Image src="https://i.imgur.com/c6rBJMX.png" />
+      //<Image src="https://i.imgur.com/c6rBJMX.png" />
+      <Image src="https://i.imgur.com/PrJF8c4.png" />
     ),
     title: "Powerfeed",
     intents: [<Button value="checkScore">Check your Power Score</Button>],
@@ -100,8 +103,11 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     WHERE hash = ${hash}
   `;
 
+  let powerUser;
+
   // if c.var.interactor.fid exists and if existingData is not empty
   if (c.var.interactor?.fid && existingData.rows.length > 0) {
+    powerUser = powerUsersFids.includes(Number(c.var.interactor.fid));
     if (c.var.interactor.fid === existingData.rows[0].fid) {
       console.log(
         "Hash exists in the database and interactor fid is equal to the fid from the database"
@@ -119,6 +125,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       );
       ({ username, pfpUrl, fid } = c.var.interactor || {});
       console.log(`INTERACTOR DATA Username: ${username}, FID: ${fid}`);
+      powerUser = powerUsersFids.includes(Number(c.var.interactor.fid));
+      console.log(`Fid ${fid} is a power user: ${powerUser}`);
       // check if that fid is already in the table
       // game 1 settings
       // const existingFid = await sql`
@@ -188,14 +196,14 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         console.log(
           `Existing data & generated hash: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, buildScore: ${buildScore}, hash: ${hash}`
         );
-        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️🐶🐱🐸🐧🐴🐹🐰&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
         await syncETHAddresses(fid);
 
         return c.res({
           image: (
             <Rows gap="1" grow>
-              <Image src="/powergame2title.png" />
+              <Image src="/powergame3title.png" />
               <Divider color="green" />
               <Row
                 backgroundColor="background"
@@ -238,20 +246,19 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                     display="flex"
                   >
                     <Text color="white" size="18" wrap="balance">
-                      ⚡️Power score: {score}
+                      💪Power score: {score}
                     </Text>
                     <Text color="white" size="18">
-                      🛠️Builder score: {buildScore}
+                      ⚡️to send daily: {powerUser ? "5" : "3"}
                     </Text>
                     <Text color="white" size="18">
-                      💰points per⚡️:{" "}
-                      {((Number(score) + Number(buildScore)) * 10).toString()}
+                    💰points per⚡️: {((Number(score)) * 10).toString()}
                     </Text>
                   </Box>
                 </HStack>
               </Row>
               <Divider color="green" />
-              <Image src="/powergame2bottom.png" />
+              <Image src="/powergame3bottom.png" />
             </Rows>
           ),
           intents: [
@@ -286,7 +293,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         } catch (e) {
           return c.res({
             action: `/score/${hash}`,
-            image: <Image src="https://i.imgur.com/c6rBJMX.png" />,
+            image: <Image src="https://i.imgur.com/PrJF8c4.png" />,
             intents: [
               <Button value="checkScore">Check your Power Score</Button>,
             ],
@@ -327,12 +334,12 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           hashPoints = await generateRandomHash();
         }
 
-        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️🐶🐱🐸🐧🐴🐹🐰&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
         return c.res({
           image: (
             <Rows gap="1" grow>
-              <Image src="/powergame2title.png" />
+              <Image src="/powergame3title.png" />
               <Divider color="green" />
               <Row
                 backgroundColor="background"
@@ -375,20 +382,19 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                     display="flex"
                   >
                     <Text color="white" size="18" wrap="balance">
-                      ⚡️Power score: {score}
+                      💪Power score: {score}
                     </Text>
                     <Text color="white" size="18">
-                      🛠️Builder score: {buildScore.toString()}
+                      ⚡️to give daily: {powerUser ? "5" : "3"}
                     </Text>
                     <Text color="white" size="18">
-                      💰points per⚡️:{" "}
-                      {((Number(score) + Number(buildScore)) * 10).toString()}
+                      💰points per⚡️: {((Number(score)) * 10).toString()}
                     </Text>
                   </Box>
                 </HStack>
               </Row>
               <Divider color="green" />
-              <Image src="/powergame2bottom.png" />
+              <Image src="/powergame3bottom.png" />
             </Rows>
           ),
           intents: [
@@ -426,6 +432,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     console.log(
       `Hash already exists with username ${username} and score ${score}`
     );
+    powerUser = powerUsersFids.includes(Number(fid));
   } else {
     // If the hash does not exist, fetch the data from the external source
     ({ username, pfpUrl, fid } = c.var.interactor || {});
@@ -436,6 +443,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       FROM user_scores
       WHERE fid = ${fid}
     `;
+    powerUser = powerUsersFids.includes(Number(fid));
     if (existingFid.rows.length > 0) {
       console.log(`The fid ${fid} is already in the table`);
       // set score
@@ -489,7 +497,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       } catch (e) {
         return c.res({
           action: `/score/${hash}`,
-          image: <Image src="https://i.imgur.com/c6rBJMX.png" />,
+          image: <Image src="https://i.imgur.com/PrJF8c4.png" />,
           intents: [<Button value="checkScore">Check your Power Score</Button>],
         });
       }
@@ -505,7 +513,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       await syncETHAddresses(fid);
     }
   }
-  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20/build%20in%20public%20in%20a%20new%20/powerfeed%20game!👷‍♀️👷&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️🐶🐱🐸🐧🐴🐹🐰&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
   console.log(
     `Username: ${username}, FID: ${fid}, Score: ${score}, Build Score: ${buildScore} `
@@ -528,7 +536,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   return c.res({
     image: (
       <Rows gap="1" grow>
-        <Image src="/powergame2title.png" />
+        <Image src="/powergame3title.png" />
         <Divider color="green" />
         <Row
           backgroundColor="background"
@@ -567,20 +575,19 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
               display="flex"
             >
               <Text color="white" size="18" wrap="balance">
-                ⚡️Power score: {score}
+                💪Power score: {score}
               </Text>
               <Text color="white" size="18">
-                🛠️Builder score: {buildScore.toString()}
+                ⚡️to send daily: {powerUser ? "5" : "3"}
               </Text>
               <Text color="white" size="18">
-                💰points per⚡️:{" "}
-                {((Number(score) + Number(buildScore)) * 10).toString()}
+                💰points per⚡️: {((Number(score)) * 10).toString()}
               </Text>
             </Box>
           </HStack>
         </Row>
         <Divider color="green" />
-        <Image src="/powergame2bottom.png" />
+        <Image src="/powergame3bottom.png" />
       </Rows>
     ),
     intents: [
@@ -628,8 +635,8 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
       action: "/gamerules",
       // game 1 rules
       //image: "https://i.imgur.com/hxX85GY.png",
-      // game 2 rules
-      image: "https://i.imgur.com/UMwnEuG.png",
+      // game 3 rules
+      image: "https://i.imgur.com/BNTCnd3.png",
       //imageAspectRatio: "1.91:1",
       intents: [
         // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
@@ -647,7 +654,8 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
   } else {
     return c.res({
       action: "/gamerules",
-      image: "https://i.imgur.com/UMwnEuG.png",
+      //image: "https://i.imgur.com/UMwnEuG.png",
+      image: "https://i.imgur.com/BNTCnd3.png",
       //imageAspectRatio: "1.91:1",
       intents: [
         // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
@@ -710,7 +718,7 @@ app.frame("/rules", neynarMiddleware, async (c) => {
   // get the fid, username of the interactor
   return c.res({
     action: "/soon",
-    image: "https://i.imgur.com/UMwnEuG.png",
+    image: "https://i.imgur.com/BNTCnd3.png",
     //imageAspectRatio: "1.91:1",
     intents: [
       <Button value="backbutton" action={`/gamerules`}>
@@ -1138,7 +1146,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
 const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
-//devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
+devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
 
 export const GET = handle(app);
 export const POST = handle(app);
