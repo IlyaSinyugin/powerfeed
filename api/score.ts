@@ -77,6 +77,7 @@ async function filterCasts(rows: any) {
     const userCastReplySet: { [key: string]: Set<string> } = {};
     const initialCutoffDate = new Date('2024-06-05T16:00:00Z');
     const additionalCutoffDate = new Date('2024-06-10T18:00:00Z');
+    const finalCutoffDate = new Date('2024-06-17T16:00:00Z');
 
     // Adjust the dateKey calculation to start the new day at 16:00 UTC
     const getAdjustedDateKey = (date: Date) => {
@@ -95,18 +96,21 @@ async function filterCasts(rows: any) {
         const dateKey = getAdjustedDateKey(replyDate);
         
         // Determine if the reply is before or after the additionalCutoffDate time on the same day
-        const isAfterCutoff = replyDate >= additionalCutoffDate && replyDate.toISOString().split('T')[0] === additionalCutoffDate.toISOString().split('T')[0];
+        //const isAfterCutoff = replyDate >= additionalCutoffDate && replyDate.toISOString().split('T')[0] === additionalCutoffDate.toISOString().split('T')[0];
+        const isAfterAdditionalCutoff = replyDate >= additionalCutoffDate && replyDate.toISOString().split('T')[0] === additionalCutoffDate.toISOString().split('T')[0];
+        const isAfterFinalCutoff = replyDate >= finalCutoffDate && replyDate.toISOString().split('T')[0] === finalCutoffDate.toISOString().split('T')[0];
 
         // Adjust userKey to include time segment
-        const userKey = `${row.reply_from_fid}-${dateKey}-${isAfterCutoff ? 'after' : 'before'}`;
+        const userKey = `${row.reply_from_fid}-${dateKey}-${isAfterFinalCutoff ? 'afterFinal' : isAfterAdditionalCutoff ? 'afterAdditional' : 'before'}`;
         const userCastKey = `${row.reply_from_fid}-${row.original_cast_hash}`;
 
         if (row.reply_text.includes('⚡') && row.reply_from_fid !== row.reply_to_fid) {
             if (!userReplyCount[userKey]) {
                 const isPowerUser = powerUsersFids.includes(Number(row.reply_from_fid));
-                let limit;
-
-                if (replyDate >= additionalCutoffDate) {
+                let limit;  
+                if (replyDate >= finalCutoffDate) {
+                    limit = isPowerUser ? 5 : 3;
+                } else if (replyDate >= additionalCutoffDate) {
                     limit = 3;
                 } else if (replyDate >= initialCutoffDate) {
                     limit = isPowerUser ? 10 : 5;
