@@ -10,8 +10,9 @@ import crypto from "crypto";
 // import it outside of api folder
 dotenv.config({ path: path.join(process.cwd(), './.env') });
 
+// function for generating random hash, needed when adding new data to the database
 async function generateRandomHash() {
-    const randomString = crypto.randomBytes(16).toString('base64url').substring(0, 22); 
+    const randomString = crypto.randomBytes(16).toString('base64url').substring(0, 22);
     console.log(`Random hash generated: ${randomString}`);
     return randomString;
 }
@@ -19,15 +20,13 @@ async function generateRandomHash() {
 // retrieve json data from redash 
 async function retrieveJSON() {
     const REDASH_LINK = process.env.REDASH_REPLIES_LINK || '';
-
     if (!REDASH_LINK) {
         console.error('No Redash link provided.');
         return;
     }
-
     try {
         console.log('Fetching replies from Redash...');
-        let response = await fetch(REDASH_LINK,
+        const response = await fetch(REDASH_LINK,
             {
                 method: 'GET',
                 headers: {
@@ -35,8 +34,8 @@ async function retrieveJSON() {
                 },
             }
         );
-        let data = await response.json();
-       //await filterCasts(data.query_result.data.rows);
+        const data = await response.json();
+        await filterCasts(data.query_result.data.rows);
         await calculateAndStorePoints();
         //await insertDataIntoDatabase(data.query_result.data.rows);
     } catch (e) {
@@ -70,11 +69,13 @@ async function insertDataIntoDatabase(rows: any) {
 async function filterCasts(rows: any) {
     console.log('Filtering data...');
 
-    // Remove the retrieval of the latest cast_timestamp
-    console.log('Processing all rows without filtering by the latest timestamp.');
-
+    // tracks the count and limit of replies per user per day
     const userReplyCount: { [key: string]: { count: number, limit: number } } = {};
+
+    // tracks the cast hashes that a user has replied to, to prevent duplicate replies
     const userCastReplySet: { [key: string]: Set<string> } = {};
+
+    // Cutoff dates for different reply limits
     const initialCutoffDate = new Date('2024-06-05T16:00:00Z');
     const additionalCutoffDate = new Date('2024-06-10T18:00:00Z');
     const finalCutoffDate = new Date('2024-06-17T16:00:00Z');
@@ -86,28 +87,48 @@ async function filterCasts(rows: any) {
         return adjustedDate.toISOString().split('T')[0];
     };
 
-    // Sort rows by cast_timestamp to process them from the start of the day
+    // Sort rows by cast_timestamp to process them from the start of the day (in chronological order)
     rows.sort((a: any, b: any) => new Date(a.cast_timestamp).getTime() - new Date(b.cast_timestamp).getTime());
 
+    const latestInsertedTimestamp = await getLatestSavedReactionTimestamp();
+
+    if (latestInsertedTimestamp) {
+        console.log('Latest inserted timestamp:', latestInsertedTimestamp);
+        const latestInsertedDate = new Date(latestInsertedTimestamp);
+        // back the date up by 1 day to ensure we don't miss any replies
+        latestInsertedDate.setDate(latestInsertedDate.getDate() - 1);
+        // backtrack the date to the start of the day (16:00 UTC)
+        latestInsertedDate.setUTCHours(8);
+        console.log('Latest BACKTRACKED inserted date (adjusted):', latestInsertedDate);
+        // filter out the rows that are before the latest inserted date
+        rows = rows.filter((row: any) => new Date(row.cast_timestamp) > latestInsertedDate);
+        console.log('Filtered rows based on latest inserted date:', rows.length);
+    }
+
+    // store the filtered rows
     const finalFilteredRows = [];
 
+    // go through each reply and filter out the ones that don't meet the criteria
     for (let row of rows) {
+        // get the date of the reply and adjust the date key
         const replyDate = new Date(row.cast_timestamp);
         const dateKey = getAdjustedDateKey(replyDate);
-        
+
         // Determine if the reply is before or after the additionalCutoffDate time on the same day
-        //const isAfterCutoff = replyDate >= additionalCutoffDate && replyDate.toISOString().split('T')[0] === additionalCutoffDate.toISOString().split('T')[0];
         const isAfterAdditionalCutoff = replyDate >= additionalCutoffDate && replyDate.toISOString().split('T')[0] === additionalCutoffDate.toISOString().split('T')[0];
         const isAfterFinalCutoff = replyDate >= finalCutoffDate && replyDate.toISOString().split('T')[0] === finalCutoffDate.toISOString().split('T')[0];
 
-        // Adjust userKey to include time segment
+        // Adjust userKey to include time segment, and determine the reply limit based on the cutoff date
         const userKey = `${row.reply_from_fid}-${dateKey}-${isAfterFinalCutoff ? 'afterFinal' : isAfterAdditionalCutoff ? 'afterAdditional' : 'before'}`;
+        // Adjust userCastKey to include the original cast hash
         const userCastKey = `${row.reply_from_fid}-${row.original_cast_hash}`;
 
+        // only process replies that contain the lightning bolt emoji and are not replies to the same user
         if (row.reply_text.includes('⚡') && row.reply_from_fid !== row.reply_to_fid) {
             if (!userReplyCount[userKey]) {
+                // check if the user is a power user
                 const isPowerUser = powerUsersFids.includes(Number(row.reply_from_fid));
-                let limit;  
+                let limit;
                 if (replyDate >= finalCutoffDate) {
                     limit = isPowerUser ? 5 : 3;
                 } else if (replyDate >= additionalCutoffDate) {
@@ -117,17 +138,21 @@ async function filterCasts(rows: any) {
                 } else {
                     limit = 3;
                 }
-
+                // Initialize userReplyCount for the user
                 userReplyCount[userKey] = { count: 0, limit: limit };
+
+                // logging the initialization of userReplyCount for a specific user
                 if (row.reply_from_fid === 429107) {
                     console.log(`Initialized userReplyCount for ${userKey}:`, userReplyCount[userKey]);
                 }
             }
 
+            // Initialize userCastReplySet for the user
             if (!userCastReplySet[userCastKey]) {
                 userCastReplySet[userCastKey] = new Set();
             }
 
+            // Add the reply to the finalFilteredRows if the user has not reached the reply limit and has not replied to the same cast
             if (userReplyCount[userKey].count < userReplyCount[userKey].limit && !userCastReplySet[userCastKey].has(row.cast_hash)) {
                 finalFilteredRows.push(row);
                 userReplyCount[userKey].count++;
@@ -161,7 +186,6 @@ async function filterCasts(rows: any) {
     }
 }
 
-
 async function getLatestSavedReactionTimestamp() {
     const result = await sql`
         SELECT MAX(cast_timestamp) as latest_timestamp
@@ -170,49 +194,46 @@ async function getLatestSavedReactionTimestamp() {
     return result.rows[0]?.latest_timestamp || null;
 }
 
-
-
-
 async function calculateAndStorePoints() {
     try {
         console.log('Retrieving all user scores...');
+
         // Retrieve all user scores
         const usersResult = await sql`
             SELECT * FROM user_scores
         `;
         const users: any[] = usersResult.rows; // Access rows property to get the actual data
 
-        // Create a map to store the calculated scores and another to store user scores
+        // dictionary of user scores 
         const userScoresMap: { [key: string]: number } = {};
+
+        // dictionary of power scores
         const userPowerScores: { [key: string]: { score: number, score_game2: number | null, builder_score: number | null } } = {};
+        
+        // reactions sent by each user
         const reactionsSentMap: { [key: string]: number } = {};
+        
+        // reactions received by each user
         const reactionsReceivedMap: { [key: string]: number } = {};
+
         const additionalCutoffDate = new Date('2024-06-10T18:00:00Z');
 
+        const buildGameFinishCutoffDate = new Date('2024-06-17T16:00:00Z')
+
         console.log('Initializing user scores...');
+
         // Initialize scores to 0 and store user scores
         users.forEach((user) => {
             userScoresMap[user.fid] = 0;
-            userPowerScores[user.fid] = { 
-                score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1), 
-                score_game2: user.score_game2 ? Number(user.score_game2) : 0, 
-                builder_score: user.builder_score ? Number(user.builder_score) : 0 
+            userPowerScores[user.fid] = {
+                score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1),
+                score_game2: user.score_game2 ? Number(user.score_game2) : 0,
+                builder_score: user.builder_score ? Number(user.builder_score) : 0
             };
             reactionsSentMap[user.fid] = 0;
             reactionsReceivedMap[user.fid] = 0;
         });
 
-        // console.log('Retrieving latest saved reaction timestamp...');
-        // const latestTimestamp = await getLatestSavedReactionTimestamp();
-        // const startDate = latestTimestamp ? new Date(latestTimestamp) : new Date(Date.now() - 86400000); // If no timestamp, start from the previous day
-        // startDate.setHours(16, 0, 0, 0); // Set to 16:00 UTC
-    
-        // console.log('Retrieving filtered reactions...');
-        // Retrieve filtered reactions starting from the latest timestamp
-
-        // const reactionsResult = await sql`
-        //     SELECT * FROM powerfeed_replies_filtered WHERE cast_timestamp > ${startDate.toISOString()}
-        // `;
         console.log('Retrieving filtered reactions...');
         let offset = 0;
         const limit = 10000;
@@ -244,27 +265,31 @@ async function calculateAndStorePoints() {
                 const userResult = await sql`
                     SELECT * FROM user_scores WHERE fid = ${replyFromFid}
                 `;
+
+                // if the user is found in the database, add the user to the userScoresMap
                 if (userResult.rows.length > 0) {
                     const user = userResult.rows[0];
                     userScoresMap[user.fid] = 0;
-                    userPowerScores[user.fid] = { 
-                        score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1), 
-                        score_game2: user.score_game2 ? Number(user.score_game2) : (user.score ? Number(user.score) : 1), 
-                        builder_score: user.builder_score ? Number(user.builder_score) : 0 
+                    userPowerScores[user.fid] = {
+                        score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1),
+                        score_game2: user.score_game2 ? Number(user.score_game2) : (user.score ? Number(user.score) : 1),
+                        builder_score: user.builder_score ? Number(user.builder_score) : 0
                     };
                     reactionsSentMap[user.fid] = 0;
                     reactionsReceivedMap[user.fid] = 0;
-                } else {
+                } 
+                // if the user is not found in the database, fetch the user data
+                else {
                     // Fetch the user's power score and other data
                     const { username, pfpUrl, fid, score, builder_score } = await fetchUserData(replyFromFid) as any;
                     if (username && pfpUrl && fid && !isNaN(score)) {
                         const hash = await generateRandomHash();
                         userScoresMap[fid] = 0;
-                        userPowerScores[fid] = { 
-                            score: score? Number(score) : 1, 
-                            score_game2: score? Number(score) : 1,
-                            builder_score: builder_score ? Number(builder_score) : 0 
-                        };                        
+                        userPowerScores[fid] = {
+                            score: score ? Number(score) : 1,
+                            score_game2: score ? Number(score) : 1,
+                            builder_score: builder_score ? Number(builder_score) : 0
+                        };
                         reactionsSentMap[fid] = 0;
                         reactionsReceivedMap[fid] = 0;
                         await sql`
@@ -272,6 +297,7 @@ async function calculateAndStorePoints() {
                             VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
+                        // sync the user's ETH address
                         await syncETHAddresses(fid);
                     }
                 }
@@ -286,11 +312,11 @@ async function calculateAndStorePoints() {
                 if (userResult.rows.length > 0) {
                     const user = userResult.rows[0];
                     userScoresMap[user.fid] = 0;
-                    userPowerScores[user.fid] = { 
-                        score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1), 
-                        score_game2: user.score_game2 ? Number(user.score_game2) : (user.score ? Number(user.score) : 1), 
-                        builder_score: user.builder_score ? Number(user.builder_score) : 0 
-                    };                    
+                    userPowerScores[user.fid] = {
+                        score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1),
+                        score_game2: user.score_game2 ? Number(user.score_game2) : (user.score ? Number(user.score) : 1),
+                        builder_score: user.builder_score ? Number(user.builder_score) : 0
+                    };
                     reactionsSentMap[user.fid] = 0;
                     reactionsReceivedMap[user.fid] = 0;
                 } else {
@@ -299,11 +325,11 @@ async function calculateAndStorePoints() {
                     if (username && pfpUrl && fid && !isNaN(score)) {
                         const hash = await generateRandomHash();
                         userScoresMap[fid] = 0;
-                        userPowerScores[fid] = { 
-                            score: Number(score), 
-                            score_game2: score ? Number(score) : 1, 
-                            builder_score: builder_score ? Number(builder_score) : 0 
-                        };                        
+                        userPowerScores[fid] = {
+                            score: Number(score),
+                            score_game2: score ? Number(score) : 1,
+                            builder_score: builder_score ? Number(builder_score) : 0
+                        };
                         reactionsSentMap[fid] = 0;
                         reactionsReceivedMap[fid] = 0;
                         await sql`
@@ -319,7 +345,7 @@ async function calculateAndStorePoints() {
             let score;
             const powerScores = userPowerScores[replyFromFid];
 
-            if (new Date(reaction.cast_timestamp) >= additionalCutoffDate) {
+            if (new Date(reaction.cast_timestamp) >= additionalCutoffDate && new Date(reaction.cast_timestamp) < buildGameFinishCutoffDate{
                 const game2Score = powerScores.score_game2 !== null ? powerScores.score_game2 : powerScores.score;
                 const builderScore = powerScores.builder_score !== null ? powerScores.builder_score : 0;
                 score = Math.floor(((game2Score + builderScore) / 2) * 10); // Multiply score by 10 to handle fractional points
@@ -411,21 +437,19 @@ async function calculateAndStorePoints() {
     }
 }
 
-
-
 // Helper function to fetch user data
 async function fetchUserData(fid: number) {
     let username = '';
     let pfpUrl = '';
 
     const options = {
-      method: 'GET',
-      headers: {accept: 'application/json', api_key: process.env.NEYNAR_API_KEY || 'NEYNAR_API_DOCS'},
+        method: 'GET',
+        headers: { accept: 'application/json', api_key: process.env.NEYNAR_API_KEY || 'NEYNAR_API_DOCS' },
     };
 
-    try { 
+    try {
         console.log(`Fetching user data for FID: ${fid}...`);
-        const response = await fetch (`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, options);
+        const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, options);
         const data = await response.json();
         const userData = data.users[0];
         username = userData.username;
