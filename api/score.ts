@@ -345,7 +345,7 @@ async function calculateAndStorePoints() {
             let score;
             const powerScores = userPowerScores[replyFromFid];
 
-            if (new Date(reaction.cast_timestamp) >= additionalCutoffDate && new Date(reaction.cast_timestamp) < buildGameFinishCutoffDate{
+            if (new Date(reaction.cast_timestamp) >= additionalCutoffDate && new Date(reaction.cast_timestamp) < buildGameFinishCutoffDate) {
                 const game2Score = powerScores.score_game2 !== null ? powerScores.score_game2 : powerScores.score;
                 const builderScore = powerScores.builder_score !== null ? powerScores.builder_score : 0;
                 score = Math.floor(((game2Score + builderScore) / 2) * 10); // Multiply score by 10 to handle fractional points
