@@ -218,7 +218,7 @@ async function calculateAndStorePoints() {
 
         const additionalCutoffDate = new Date('2024-06-10T18:00:00Z');
 
-        const buildGameFinishCutoffDate = new Date('2024-06-17T16:00:00Z')
+        const buildGameFinishCutoffDate = new Date('2024-06-21T16:00:00Z')
 
         console.log('Initializing user scores...');
 
