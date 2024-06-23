@@ -159,6 +159,7 @@ async function filterCasts(rows: any) {
                 userReplyCount[userKey].count++;
                 userCastReplySet[userCastKey].add(row.cast_hash);
                 if (row.reply_from_fid === 429107) {
+                    console.log(`date of cast: ${replyDate.toISOString()}`);
                     console.log(`Added cast ${row.cast_hash} to finalFilteredRows for user ${row.reply_from_fid}. Updated count for ${userKey}: ${userReplyCount[userKey].count}`);
                 }
             } else if (row.reply_from_fid === 429107) {
