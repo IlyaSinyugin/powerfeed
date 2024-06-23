@@ -90,6 +90,7 @@ async function filterCasts(rows: any) {
     // Sort rows by cast_timestamp to process them from the start of the day (in chronological order)
     rows.sort((a: any, b: any) => new Date(a.cast_timestamp).getTime() - new Date(b.cast_timestamp).getTime());
 
+    console.log(`initial length of rows: ${rows.length}`)
     const latestInsertedTimestamp = await getLatestSavedReactionTimestamp();
 
     if (latestInsertedTimestamp) {
@@ -98,7 +99,7 @@ async function filterCasts(rows: any) {
         // back the date up by 1 day to ensure we don't miss any replies
         latestInsertedDate.setDate(latestInsertedDate.getDate() - 1);
         // backtrack the date to the start of the day (16:00 UTC)
-        latestInsertedDate.setUTCHours(8);
+        latestInsertedDate.setUTCHours(16, 0, 0, 0);
         console.log('Latest BACKTRACKED inserted date (adjusted):', latestInsertedDate);
         // filter out the rows that are before the latest inserted date
         rows = rows.filter((row: any) => new Date(row.cast_timestamp) > latestInsertedDate);
@@ -481,8 +482,6 @@ async function runRetrieveJSONLoop() {
 //     console.log('Started JSON retrieval loop.');
 // });
 
-
-
 // execute the functions above 
 // retrieveJSON().then(() => {
 //     console.log('Script completed');
@@ -491,3 +490,6 @@ async function runRetrieveJSONLoop() {
 // calculateAndStorePoints().then(() => {
 //     console.log('Script completed');
 // });
+
+
+export { retrieveJSON, calculateAndStorePoints, runRetrieveJSONLoop, filterCasts };

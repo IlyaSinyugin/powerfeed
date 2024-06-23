@@ -13,7 +13,7 @@ import { fidScore } from './index.js';
 dotenv.config({ path: path.join(process.cwd(), './.env') });
 
 async function generateRandomHash() {
-    const randomString = crypto.randomBytes(16).toString('base64url').substring(0, 22); 
+    const randomString = crypto.randomBytes(16).toString('base64url').substring(0, 22);
     console.log(`Random hash generated: ${randomString}`);
     return randomString;
 }
@@ -336,14 +336,11 @@ async function fetchETHaddressesForFID(fid: any) {
     }
 }
 
-
-
-
 async function fetchETHaddresses() {
     const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || 'NEYNAR_API_DOCS';
     const fids = await fetchFids();
     const BATCH_SIZE = 99;
-    
+
     for (let i = 0; i < fids.length; i += BATCH_SIZE) {
         const batch = fids.slice(i, i + BATCH_SIZE);
         const fidsParam = batch.join(',');
@@ -393,14 +390,11 @@ async function fetchETHaddresses() {
     }
 }
 
-
-
-
 async function fetchETHaddressesForNull() {
     const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || 'NEYNAR_API_DOCS';
     const fids = await fetchFidsWithNullEthAddresses();
     const BATCH_SIZE = 99;
-    
+
     for (let i = 0; i < fids.length; i += BATCH_SIZE) {
         const batch = fids.slice(i, i + BATCH_SIZE);
         const fidsParam = batch.join(',');
@@ -451,7 +445,7 @@ async function fetchBuildScore() {
     let rows = results.rows;
 
     console.log(`PHASE1: Processing ${rows.length} accounts...`);
-    
+
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
         const batch = rows.slice(i, i + BATCH_SIZE);
 
@@ -849,6 +843,38 @@ async function fetchUsernamesForMissingPowerUsers() {
     console.log('Usernames saved to usernames.txt');
 }
 
+async function allowanceChecker(fid: any) {
+    // check if fid is in powerusers
+    const powerUsers = powerUsersFids.join(',');
+    const isPowerUser = powerUsers.includes(fid);
+
+    const dailyAllowance = isPowerUser ? 5 : 3;
+
+    const now = new Date();
+    const resetTime = new Date(now);
+    resetTime.setUTCHours(16, 0, 0, 0);
+    if (now < resetTime) {
+        resetTime.setDate(resetTime.getDate() - 1);
+    }
+
+    const result = await sql`
+        SELECT COUNT(*) as count 
+        FROM powerfeed_replies_filtered 
+        WHERE reply_from_fid = ${fid} AND cast_timestamp >= ${resetTime.toISOString()}
+    `;
+
+    const reactionsCount = result.rows[0].count;
+
+    console.log(`reaction count is : ${reactionsCount}`)
+
+    const reactionsLeft = dailyAllowance - reactionsCount;
+
+    return reactionsLeft >= 0 ? reactionsLeft : 0;
+}
+
+// allowanceChecker('429107').then(
+//     (reactionsLeft) => console.log(`Reactions left: ${reactionsLeft}`)
+// );
 
 // fetchPowerUsers().then(() => {
 //     console.log('Power users fetched successfully');
@@ -890,4 +916,4 @@ async function fetchUsernamesForMissingPowerUsers() {
 //     (score) => console.log(`Power score: ${JSON.stringify(score)}`)
 // );
 
-export { fetchPowerUsers, syncETHAddresses, fetchPowerScore, fetchPowerScoreGame2, fetchPowerScoreGame2ForFID, fetchETHaddresses, fetchETHaddressesForFID, fetchETHaddressesForNull, fetchBuildScore, fetchBuildScoreForFID, fetchFids, fetchFidsWithNullEthAddresses};
+export { fetchPowerUsers, syncETHAddresses, fetchPowerScore, fetchPowerScoreGame2, fetchPowerScoreGame2ForFID, fetchETHaddresses, fetchETHaddressesForFID, fetchETHaddressesForNull, fetchBuildScore, fetchBuildScoreForFID, fetchFids, fetchFidsWithNullEthAddresses, allowanceChecker };
