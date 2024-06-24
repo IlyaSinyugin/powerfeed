@@ -198,7 +198,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         console.log(
           `Existing data & generated hash: username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score: ${score}, buildScore: ${buildScore}, hash: ${hash}`
         );
-        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️🐶🐱🐸🐧🐴🐹🐰&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
         await syncETHAddresses(fid);
 
@@ -339,7 +339,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           hashPoints = await generateRandomHash();
         }
 
-        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️🐶🐱🐸🐧🐴🐹🐰&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
         //const allowance = await allowanceChecker(fid);
         //console.log(`Allowance for ${fid} is ${allowance}`);
 
@@ -520,7 +520,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       await syncETHAddresses(fid);
     }
   }
-  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️🐶🐱🐸🐧🐴🐹🐰&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+  const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
 
   console.log(
     `Username: ${username}, FID: ${fid}, Score: ${score}, Build Score: ${buildScore} `
