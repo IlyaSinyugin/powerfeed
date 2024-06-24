@@ -11,6 +11,7 @@ import {
   fetchPowerScoreGame2ForFID,
   fetchBuildScoreForFID,
   syncETHAddresses,
+  allowanceChecker
 } from "./helpers.js";
 import {
   Row,
@@ -78,7 +79,8 @@ app.frame("/", neynarMiddleware, async (c) => {
     image: (
       //<Image src="https://i.imgur.com/TMelNB7.png" />
       //<Image src="https://i.imgur.com/c6rBJMX.png" />
-      <Image src="https://i.imgur.com/PrJF8c4.png" />
+      // https://i.imgur.com/nbPPmv3.png
+      <Image src="https://i.imgur.com/nbPPmv3.png" />
     ),
     title: "Powerfeed",
     intents: [<Button value="checkScore">Check your Power Score</Button>],
@@ -200,10 +202,13 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
 
         await syncETHAddresses(fid);
 
+        //const allowance = await allowanceChecker(fid);
+        //console.log(`Allowance for ${fid} is ${allowance}`);
+
         return c.res({
           image: (
             <Rows gap="1" grow>
-              <Image src="/powergame3title.png" />
+              <Image src="/powergame4title.png" />
               <Divider color="green" />
               <Row
                 backgroundColor="background"
@@ -293,7 +298,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         } catch (e) {
           return c.res({
             action: `/score/${hash}`,
-            image: <Image src="https://i.imgur.com/PrJF8c4.png" />,
+            image: <Image src="https://i.imgur.com/nbPPmv3.png" />,
             intents: [
               <Button value="checkScore">Check your Power Score</Button>,
             ],
@@ -335,11 +340,13 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         }
 
         const shareUrl = `https://warpcast.com/~/compose?text=Check%20your%20Farcaster%20Power%20and%20join%20the%20next%20/powerfeed%20game%20%E2%80%94%20to%20earn%20and%20give%20%24power%20to%20quality%20casts!⚡️🐶🐱🐸🐧🐴🐹🐰&embeds%5B%5D=https://powerfeed.vercel.app/api/score/${hash}`;
+        //const allowance = await allowanceChecker(fid);
+        //console.log(`Allowance for ${fid} is ${allowance}`);
 
         return c.res({
           image: (
             <Rows gap="1" grow>
-              <Image src="/powergame3title.png" />
+              <Image src="/powergame4title.png" />
               <Divider color="green" />
               <Row
                 backgroundColor="background"
@@ -385,7 +392,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                       💪Power score: {score}
                     </Text>
                     <Text color="white" size="18">
-                      ⚡️to give daily: {powerUser ? "5" : "3"}
+                      ⚡️to send daily: {powerUser ? "5" : "3"}
                     </Text>
                     <Text color="white" size="18">
                       💰points per⚡️: {((Number(score)) * 10).toString()}
@@ -497,7 +504,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       } catch (e) {
         return c.res({
           action: `/score/${hash}`,
-          image: <Image src="https://i.imgur.com/PrJF8c4.png" />,
+          image: <Image src="https://i.imgur.com/nbPPmv3.png" />,
           intents: [<Button value="checkScore">Check your Power Score</Button>],
         });
       }
@@ -533,10 +540,11 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   } else {
     hashPoints = await generateRandomHash();
   }
+  //const allowance = await allowanceChecker(fid);
   return c.res({
     image: (
       <Rows gap="1" grow>
-        <Image src="/powergame3title.png" />
+        <Image src="/powergame4title.png" />
         <Divider color="green" />
         <Row
           backgroundColor="background"
@@ -578,7 +586,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
                 💪Power score: {score}
               </Text>
               <Text color="white" size="18">
-                ⚡️to send daily: {powerUser ? "5" : "3"}
+              ⚡️to send daily: {powerUser ? "5" : "3"}
               </Text>
               <Text color="white" size="18">
                 💰points per⚡️: {((Number(score)) * 10).toString()}
@@ -636,7 +644,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
       // game 1 rules
       //image: "https://i.imgur.com/hxX85GY.png",
       // game 3 rules
-      image: "https://i.imgur.com/BNTCnd3.png",
+      image: "https://i.imgur.com/tejJcKF.png",
       //imageAspectRatio: "1.91:1",
       intents: [
         // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
@@ -655,7 +663,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
     return c.res({
       action: "/gamerules",
       //image: "https://i.imgur.com/UMwnEuG.png",
-      image: "https://i.imgur.com/BNTCnd3.png",
+      image: "https://i.imgur.com/tejJcKF.png",
       //imageAspectRatio: "1.91:1",
       intents: [
         // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
@@ -718,7 +726,8 @@ app.frame("/rules", neynarMiddleware, async (c) => {
   // get the fid, username of the interactor
   return c.res({
     action: "/soon",
-    image: "https://i.imgur.com/BNTCnd3.png",
+    // https://i.imgur.com/tejJcKF.png
+    image: "https://i.imgur.com/tejJcKF.png",
     //imageAspectRatio: "1.91:1",
     intents: [
       <Button value="backbutton" action={`/gamerules`}>
@@ -803,7 +812,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 grow
               >
                 <HStack
-                  gap="18"
+                  gap="10"
                   alignHorizontal="center"
                   alignVertical="center"
                 >
@@ -879,7 +888,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
                 grow
               >
                 <HStack
-                  gap="18"
+                  gap="10"
                   alignHorizontal="center"
                   alignVertical="center"
                 >
@@ -1010,7 +1019,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
             padding="16"
             grow
           >
-            <HStack gap="18" alignHorizontal="center" alignVertical="center">
+            <HStack gap="10" alignHorizontal="center" alignVertical="center">
               <img
                 src={pfpUrl}
                 width="128"
@@ -1091,7 +1100,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
           padding="16"
           grow
         >
-          <HStack gap="18" alignHorizontal="center" alignVertical="center">
+          <HStack gap="10" alignHorizontal="center" alignVertical="center">
             <img
               src={pfpUrl}
               width="128"

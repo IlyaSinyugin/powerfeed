@@ -844,11 +844,15 @@ async function fetchUsernamesForMissingPowerUsers() {
 }
 
 async function allowanceChecker(fid: any) {
-    // check if fid is in powerusers
+    const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || 'NEYNAR_API_DOCS';
     const powerUsers = powerUsersFids.join(',');
     const isPowerUser = powerUsers.includes(fid);
-
+    console.log(`isPowerUser is ${isPowerUser}`)
     const dailyAllowance = isPowerUser ? 5 : 3;
+    const limit = 50;
+    let cursor = '';
+    let totalCount = 0;
+    let stopFetching = false;
 
     const now = new Date();
     const resetTime = new Date(now);
@@ -856,21 +860,58 @@ async function allowanceChecker(fid: any) {
     if (now < resetTime) {
         resetTime.setDate(resetTime.getDate() - 1);
     }
+    const startOfDay = resetTime.toISOString();
 
-    const result = await sql`
-        SELECT COUNT(*) as count 
-        FROM powerfeed_replies_filtered 
-        WHERE reply_from_fid = ${fid} AND cast_timestamp >= ${resetTime.toISOString()}
-    `;
+    console.log(`Start of the day: ${startOfDay}`)
 
-    const reactionsCount = result.rows[0].count;
+    const options = {
+        method: 'GET',
+        headers: { accept: 'application/json', api_key: NEYNAR_API_KEY }
+    };
 
-    console.log(`reaction count is : ${reactionsCount}`)
+    do {
+        let url = `https://api.neynar.com/v2/farcaster/feed/user/${fid}/replies_and_recasts?limit=${limit}&viewer_fid=${fid}`;
+        if (cursor) {
+            url += `&cursor=${encodeURIComponent(cursor)}`;
+        }
 
-    const reactionsLeft = dailyAllowance - reactionsCount;
+        try {
+            const response = await fetch(url, options);
+            const data = await response.json();
 
+            if (data.casts && data.casts.length > 0) {
+                for (const cast of data.casts) {
+                    const castTimestamp = (new Date(cast.timestamp)).toISOString();
+                    console.log(`castTimestamp is ${castTimestamp}`)
+                    if (castTimestamp < startOfDay) {
+                        console.log(`Reached the start of the day: ${startOfDay}`)
+                        stopFetching = true;
+                        break;
+                    }
+                    if (cast.text.includes('⚡') &&
+                        cast.root_parent_url === 'https://warpcast.com/~/channel/powerfeed' &&
+                        cast.parent_author.fid !== fid) {
+                            console.log(`Found a reaction: ${cast.text}`)
+                        totalCount++;
+                    }
+                }
+
+                cursor = data.next ? data.next.cursor : '';
+            } else {
+                break;
+            }
+        } catch (e) {
+            console.error('Error fetching user replies:', e);
+            break;
+        }
+    } while (!stopFetching && cursor);
+
+    const reactionsLeft = dailyAllowance - totalCount;
+
+    console.log(`the total number of reactions left is ${totalCount}`)
     return reactionsLeft >= 0 ? reactionsLeft : 0;
 }
+
 
 // allowanceChecker('429107').then(
 //     (reactionsLeft) => console.log(`Reactions left: ${reactionsLeft}`)
