@@ -300,8 +300,8 @@ async function calculateAndStorePoints() {
                         reactionsSentMap[fid] = 0;
                         reactionsReceivedMap[fid] = 0;
                         await sql`
-                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game4, builder_score, hash)
-                            VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${builder_score}, ${hash})
+                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game2, score_game4, builder_score, hash)
+                            VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
                         // sync the user's ETH address
@@ -342,7 +342,7 @@ async function calculateAndStorePoints() {
                         reactionsSentMap[fid] = 0;
                         reactionsReceivedMap[fid] = 0;
                         await sql`
-                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game2, score_game4 builder_score, hash)
+                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game2, score_game4, builder_score, hash)
                             VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
