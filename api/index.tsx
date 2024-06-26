@@ -98,9 +98,9 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   //   WHERE hash = ${hash}
   // `;
 
-  // game 2 settings
+  // game 4 settings
   const existingData = await sql`
-    SELECT username, pfpurl, fid, score, score_game2, builder_score
+    SELECT username, pfpurl, fid, score, score_game4, builder_score
     FROM user_scores
     WHERE hash = ${hash}
   `;
@@ -139,7 +139,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
 
       // game 2 settings
       const existingFid = await sql`
-        SELECT username, pfpurl, fid, score, score_game2, builder_score, hash
+        SELECT username, pfpurl, fid, score, score_game4, builder_score, hash
         FROM user_scores
         WHERE fid = ${fid}
       `;
@@ -147,7 +147,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         console.log(`The fid ${fid} is already in the table`);
         // set score
         //score = existingFid.rows[0].score;
-        score = existingFid.rows[0].score_game2;
+        //score = existingFid.rows[0].score_game2;
+        score = existingFid.rows[0].score_game4;
         if (existingFid.rows[0].builder_score !== null) {
           buildScore = existingFid.rows[0].builder_score;
           console.log(
@@ -159,8 +160,8 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           buildScore = await fetchBuildScoreForFID(fid);
           console.log(`Build score fetched for fid ${fid} is ${buildScore}`);
         }
-        if (existingFid.rows[0].score_game2 === null) {
-          console.log(`Score game 2 is null for fid ${fid}`);
+        if (existingFid.rows[0].score_game4 === null) {
+          console.log(`Score game 4 is null for fid ${fid}`);
           // fetch score for this fid
           try {
             score = await fetchPowerScore(fid);
@@ -316,11 +317,11 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         //   VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${hash})
         // `;
         await sql`
-        INSERT INTO user_scores (username, pfpurl, fid, score_game2, builder_score, hash)
+        INSERT INTO user_scores (username, pfpurl, fid, score_game4, builder_score, hash)
         VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${buildScore}, ${hash})
       `;
         console.log(
-          `Inserted new data, such as username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score_game2: ${score}, buildScore: ${buildScore}, hash: ${hash}`
+          `Inserted new data, such as username: ${username}, pfpUrl: ${pfpUrl}, fid: ${fid}, score_game4: ${score}, buildScore: ${buildScore}, hash: ${hash}`
         );
         await syncETHAddresses(fid);
 
@@ -433,7 +434,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       username,
       pfpurl: pfpUrl,
       fid,
-      score_game2: score,
+      score_game4: score,
       builder_score: buildScore,
     } = existingData.rows[0]);
     console.log(
@@ -446,7 +447,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     console.log(`Hash doesn't exist with username ${username} and fid ${fid}`);
     // check if that fid is already in the table
     const existingFid = await sql`
-      SELECT username, pfpurl, fid, score, score_game2, builder_score, hash
+      SELECT username, pfpurl, fid, score, score_game4, builder_score, hash
       FROM user_scores
       WHERE fid = ${fid}
     `;
@@ -454,9 +455,9 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
     if (existingFid.rows.length > 0) {
       console.log(`The fid ${fid} is already in the table`);
       // set score
-      if (existingFid.rows[0].score_game2 === null) {
+      if (existingFid.rows[0].score_game4 === null) {
         // fetch score for this fid
-        console.log(`Score game 2 is null for fid ${fid}`);
+        console.log(`Score game 4 is null for fid ${fid}`);
         // fetch score for this fid
         try {
           score = await fetchPowerScore(fid);
@@ -478,7 +479,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
           score = 1;
         }
       } else {
-        score = existingFid.rows[0].score_game2;
+        score = existingFid.rows[0].score_game4;
       }
       buildScore = existingFid.rows[0].builder_score;
       // regenerate hash to a new one
@@ -514,7 +515,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       }
       // Insert the new data into the database
       await sql`
-        INSERT INTO user_scores (username, pfpurl, fid, score_game2, builder_score, hash)
+        INSERT INTO user_scores (username, pfpurl, fid, score_game4, builder_score, hash)
         VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${buildScore}, ${hash})
     `;
       await syncETHAddresses(fid);
@@ -1155,7 +1156,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
 const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
-//devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
+devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
 
 export const GET = handle(app);
 export const POST = handle(app);

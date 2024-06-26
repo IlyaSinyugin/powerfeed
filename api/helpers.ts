@@ -111,10 +111,12 @@ async function fetchPowerScore(fid: any) {
                     console.log(`fidScore as a whole is ${JSON.stringify(fidScore)}`)
                     if (data.query_result.data.rows[0].score === 0) {
                         // insert it to the db update 
-                        await sql`UPDATE user_scores SET score_game2 = 1 WHERE fid = ${fid}`;
+                        //await sql`UPDATE user_scores SET score_game2 = 1 WHERE fid = ${fid}`;
+                        await sql`UPDATE user_scores SET score_game4 = 1 WHERE fid = ${fid}`;
                         return 1;
                     } else {
-                        await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].power_score} WHERE fid = ${fid}`;
+                        //await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].power_score} WHERE fid = ${fid}`;
+                        await sql`UPDATE user_scores SET score_game4 = ${data.query_result.data.rows[0].power_score} WHERE fid = ${fid}`;
                         console.log(`Returning the score ${JSON.stringify(data.query_result.data.rows[0].power_score)}`)
                         return data.query_result.data.rows[0].power_score;
                     }
@@ -123,12 +125,13 @@ async function fetchPowerScore(fid: any) {
         } else {
             fidScore[fid] = data.query_result.data.rows[0].power_score;
             console.log(`Returning the score ${JSON.stringify(data.query_result.data.rows[0])}`)
-            await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].power_score} WHERE fid = ${fid}`;
+            //await sql`UPDATE user_scores SET score_game2 = ${data.query_result.data.rows[0].power_score} WHERE fid = ${fid}`;
+            await sql`UPDATE user_scores SET score_game4 = ${data.query_result.data.rows[0].power_score} WHERE fid = ${fid}`;
             return data.query_result.data.rows[0].power_score;
         }
     } catch (e) {
         console.error('Error fetching power score:', e);
-        return null;
+        return 1;
     }
 }
 
@@ -199,6 +202,136 @@ async function fetchPowerScoreGame2() {
         }
     } catch (e) {
         console.error('Error fetching or updating power scores:', e);
+    }
+}
+
+async function fetchPowerScoreGame4() {
+    const REDASH_API = process.env.REDASH_API;
+    const url = `https://data.hubs.neynar.com/api/queries/692/results`;
+    const powerUsers = powerUsersFids.join(',');
+
+    try {
+        const result = await sql`SELECT fid FROM user_scores`;
+        const rows = result.rows;
+        const targetFids = rows.map(row => row.fid).join(',');
+
+        console.log(`Fetching power scores for ${rows.length} users...`);
+
+        const payload = {
+            'max_age': 18000,
+            'parameters': {
+                'target_fids': targetFids,
+                'power_user_fids': powerUsers,
+            }
+        };
+
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Key ${REDASH_API}`
+            },
+            body: JSON.stringify(payload),
+        };
+
+        let response = await fetch(url, options);
+        let data = await response.json();
+
+        console.log(`Initial response: ${JSON.stringify(data)}`);
+
+        if ('job' in data) {
+            const jobId = data.job.id;
+            let jobStatus = data.job.status;
+
+            // Polling for job status until it completes
+            while (jobStatus < 3) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                response = await fetch(`${url}/${jobId}`, { headers: { Authorization: `Key ${REDASH_API}` } });
+                data = await response.json();
+                jobStatus = data.job.status;
+                console.log(`Polling job status: ${jobStatus}`);
+            }
+        }
+
+        if (data.query_result && data.query_result.data) {
+            console.log(`Final query result: ${JSON.stringify(data.query_result.data)}`);
+
+            const results = data.query_result.data.rows;
+            for (const result of results) {
+                let { author_fid, power_score } = result;
+                if (power_score === 0) {
+                    power_score = 1;
+                }
+
+                await sql`UPDATE user_scores SET score_game4 = ${power_score} WHERE fid = ${author_fid}`;
+            }
+
+            console.log('Power scores updated successfully');
+        } else {
+            console.error('Query result data is missing');
+        }
+    } catch (e) {
+        console.error('Error fetching or updating power scores:', e);
+    }
+}
+
+async function fetchPowerScoreGame4ForFID(fid: any, retries = 3) {
+    const REDASH_API = process.env.REDASH_API;
+    const url = `https://data.hubs.neynar.com/api/queries/692/results`;
+    const powerUsers = powerUsersFids.join(',');
+
+    const payload = {
+        'max_age': 18000,
+        'parameters': {
+            'target_fids': fid,
+            'power_user_fids': powerUsers,
+        }
+    };
+
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Key ${REDASH_API}`
+        },
+        body: JSON.stringify(payload),
+    };
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            console.log(`Fetching power score for fid ${fid}, attempt ${attempt}...`);
+            let response = await fetch(url, options);
+            let data = await response.json();
+
+            if ('job' in data) {
+                while (data.job.status < 3) {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    response = await fetch(url, options);
+                    data = await response.json();
+                }
+            }
+
+            if ('query_result' in data) {
+                // Extract the power score
+                const result = data.query_result.data.rows[0];
+                let { power_score } = result;
+                if (power_score === 0 || power_score === undefined) {
+                    power_score = 1;
+                }
+                // Update the database
+                await sql`UPDATE user_scores SET score_game4 = ${power_score} WHERE fid = ${fid}`;
+                console.log(`Power score updated successfully for fid ${fid}`);
+                return power_score;
+            } else {
+                console.error(`Query result data is missing for fid ${fid}`);
+                return null;
+            }
+        } catch (e) {
+            console.error(`Error fetching or updating power score for fid ${fid} on attempt ${attempt}:`, e);
+            if (attempt === retries) {
+                return null;
+            }
+        }
     }
 }
 

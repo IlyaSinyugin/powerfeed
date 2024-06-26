@@ -210,7 +210,7 @@ async function calculateAndStorePoints() {
         const userScoresMap: { [key: string]: number } = {};
 
         // dictionary of power scores
-        const userPowerScores: { [key: string]: { score: number, score_game2: number | null, builder_score: number | null } } = {};
+        const userPowerScores: { [key: string]: { score: number, score_game2: number | null, score_game4: number | null, builder_score: number | null } } = {};
         
         // reactions sent by each user
         const reactionsSentMap: { [key: string]: number } = {};
@@ -222,14 +222,17 @@ async function calculateAndStorePoints() {
 
         const buildGameFinishCutoffDate = new Date('2024-06-21T16:00:00Z')
 
+        const game4CutoffDate = new Date('2024-06-24T16:00:00Z');
+
         console.log('Initializing user scores...');
 
         // Initialize scores to 0 and store user scores
         users.forEach((user) => {
             userScoresMap[user.fid] = 0;
             userPowerScores[user.fid] = {
-                score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1),
+                score: user.score ? Number(user.score) : (user.score_game4 ? Number(user.score_game4) : 1),
                 score_game2: user.score_game2 ? Number(user.score_game2) : 0,
+                score_game4: user.score_game4 ? Number(user.score_game4) : 0,
                 builder_score: user.builder_score ? Number(user.builder_score) : 0
             };
             reactionsSentMap[user.fid] = 0;
@@ -275,6 +278,7 @@ async function calculateAndStorePoints() {
                     userPowerScores[user.fid] = {
                         score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1),
                         score_game2: user.score_game2 ? Number(user.score_game2) : (user.score ? Number(user.score) : 1),
+                        score_game4: user.score_game4 ? Number(user.score_game4) : 1,
                         builder_score: user.builder_score ? Number(user.builder_score) : 0
                     };
                     reactionsSentMap[user.fid] = 0;
@@ -290,12 +294,13 @@ async function calculateAndStorePoints() {
                         userPowerScores[fid] = {
                             score: score ? Number(score) : 1,
                             score_game2: score ? Number(score) : 1,
+                            score_game4: score ? Number(score) : 1,
                             builder_score: builder_score ? Number(builder_score) : 0
                         };
                         reactionsSentMap[fid] = 0;
                         reactionsReceivedMap[fid] = 0;
                         await sql`
-                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game2, builder_score, hash)
+                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game4, builder_score, hash)
                             VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
@@ -317,6 +322,7 @@ async function calculateAndStorePoints() {
                     userPowerScores[user.fid] = {
                         score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : 1),
                         score_game2: user.score_game2 ? Number(user.score_game2) : (user.score ? Number(user.score) : 1),
+                        score_game4: user.score_game4 ? Number(user.score_game4) : 1,
                         builder_score: user.builder_score ? Number(user.builder_score) : 0
                     };
                     reactionsSentMap[user.fid] = 0;
@@ -330,13 +336,14 @@ async function calculateAndStorePoints() {
                         userPowerScores[fid] = {
                             score: Number(score),
                             score_game2: score ? Number(score) : 1,
+                            score_game4: score ? Number(score) : 1,
                             builder_score: builder_score ? Number(builder_score) : 0
                         };
                         reactionsSentMap[fid] = 0;
                         reactionsReceivedMap[fid] = 0;
                         await sql`
-                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game2, builder_score, hash)
-                            VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${builder_score}, ${hash})
+                            INSERT INTO user_scores (username, pfpurl, fid, score, score_game2, score_game4 builder_score, hash)
+                            VALUES (${username}, ${pfpUrl}, ${fid}, ${score}, ${score}, ${score}, ${builder_score}, ${hash})
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
                         await syncETHAddresses(fid);
@@ -351,7 +358,13 @@ async function calculateAndStorePoints() {
                 const game2Score = powerScores.score_game2 !== null ? powerScores.score_game2 : powerScores.score;
                 const builderScore = powerScores.builder_score !== null ? powerScores.builder_score : 0;
                 score = Math.floor(((game2Score + builderScore) / 2) * 10); // Multiply score by 10 to handle fractional points
-            } else {
+            } // if the reaction is after the game 4 cutoff date, then use the game 4 score
+            if (new Date(reaction.cast_timestamp) >= game4CutoffDate) {
+                const game4Score = powerScores.score_game4 !== null ? powerScores.score_game4 : (await fetchPowerScore(replyFromFid.toString()) || 1);
+                score = Math.floor((game4Score / 2) * 10); // Multiply score by 10 to handle fractional points
+            }
+            // TODO: add a condition for game 4 to use score_game4
+            else {
                 score = Math.floor((powerScores.score / 2) * 10); // Multiply score by 10 to handle fractional points
             }
 
