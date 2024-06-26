@@ -347,6 +347,8 @@ async function calculateAndStorePoints() {
                         `;
                         console.log(`Inserted user ${username} into user_scores table.`);
                         await syncETHAddresses(fid);
+                    } else {
+                        console.error(`User ${replyToFid} not found in user_scores table. Could not fetch data.`);
                     }
                 }
             }
