@@ -102,7 +102,7 @@ async function fetchPowerScore(fid: any) {
         let data = await response.json();
         if ('job' in data) {
             while (data.job.status < 3) {
-                await new Promise((resolve) => setTimeout(resolve, 1000));
+                await new Promise((resolve) => setTimeout(resolve, 5000));
                 response = await fetch(url, options);
                 data = await response.json();
                 if ('query_result' in data) {
@@ -245,7 +245,8 @@ async function fetchPowerScoreGame4() {
 
             // Polling for job status until it completes
             while (jobStatus < 3) {
-                await new Promise((resolve) => setTimeout(resolve, 1000));
+                console.log(`While loop: ${jobStatus}`)
+                await new Promise((resolve) => setTimeout(resolve, 5000));
                 response = await fetch(`${url}/${jobId}`, { headers: { Authorization: `Key ${REDASH_API}` } });
                 data = await response.json();
                 jobStatus = data.job.status;
