@@ -230,7 +230,7 @@ async function calculateAndStorePoints() {
         users.forEach((user) => {
             userScoresMap[user.fid] = 0;
             userPowerScores[user.fid] = {
-                score: user.score ? Number(user.score) : (user.score_game4 ? Number(user.score_game4) : 1),
+                score: user.score ? Number(user.score) : (user.score_game2 ? Number(user.score_game2) : (user.score_game4 ? Number(user.score_game4) : 1)),
                 score_game2: user.score_game2 ? Number(user.score_game2) : 0,
                 score_game4: user.score_game4 ? Number(user.score_game4) : 0,
                 builder_score: user.builder_score ? Number(user.builder_score) : 0
@@ -407,10 +407,11 @@ async function calculateAndStorePoints() {
                     `;
                     if (existingPointsResult.rows.length > 0) {
                         const existingPoints = existingPointsResult.rows[0].points;
-                        console.log(`Existing points for user ${username}:`, existingPointsResult.rows[0])
-                        console.log(`Calculated points for user ${username}:`, { points, reactionsSent, reactionsReceived });
-                        if (existingPoints !== points && points > 0) {
+                        //console.log(`Existing points for user ${username}:`, existingPointsResult.rows[0])
+                        //console.log(`Calculated points for user ${username}:`, { points, reactionsSent, reactionsReceived });
+                        if (existingPoints !== points && points > 0 && points > existingPoints) {
                             const hash = await generateRandomHash();
+                            console.log(`Points larger than existing points for user ${username}. Updating from ${existingPoints} to ${points}`)
                             // Update points and hash if they differ
                             await sql`
                                 UPDATE user_points
@@ -418,6 +419,8 @@ async function calculateAndStorePoints() {
                                 WHERE fid = ${fid}
                             `;
                             console.log(`Updated points for user ${username} in user_points table.`);
+                        } if (existingPoints > points) {
+                            console.log(`Existing points for user ${username} are greater than calculated points. Skipping update.`);
                         }
                     } else {
                         const hash = await generateRandomHash();
