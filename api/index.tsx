@@ -80,7 +80,8 @@ app.frame("/", neynarMiddleware, async (c) => {
       //<Image src="https://i.imgur.com/TMelNB7.png" />
       //<Image src="https://i.imgur.com/c6rBJMX.png" />
       // https://i.imgur.com/nbPPmv3.png
-      <Image src="https://i.imgur.com/nbPPmv3.png" />
+      // https://i.imgur.com/PWel6ij.png
+      <Image src="https://i.imgur.com/PWel6ij.png" />
     ),
     title: "Powerfeed",
     intents: [<Button value="checkScore">Check your Power Score</Button>],
@@ -209,7 +210,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         return c.res({
           image: (
             <Rows gap="1" grow>
-              <Image src="/powergame4title.png" />
+              <Image src="/powergame5title.png" />
               <Divider color="green" />
               <Row
                 backgroundColor="background"
@@ -299,7 +300,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         } catch (e) {
           return c.res({
             action: `/score/${hash}`,
-            image: <Image src="https://i.imgur.com/nbPPmv3.png" />,
+            image: <Image src="https://i.imgur.com/PWel6ij.png" />,
             intents: [
               <Button value="checkScore">Check your Power Score</Button>,
             ],
@@ -347,7 +348,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
         return c.res({
           image: (
             <Rows gap="1" grow>
-              <Image src="/powergame4title.png" />
+              <Image src="/powergame5title.png" />
               <Divider color="green" />
               <Row
                 backgroundColor="background"
@@ -505,7 +506,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
       } catch (e) {
         return c.res({
           action: `/score/${hash}`,
-          image: <Image src="https://i.imgur.com/nbPPmv3.png" />,
+          image: <Image src="https://i.imgur.com/PWel6ij.png" />,
           intents: [<Button value="checkScore">Check your Power Score</Button>],
         });
       }
@@ -545,7 +546,7 @@ app.frame("/score/:id", neynarMiddleware, async (c) => {
   return c.res({
     image: (
       <Rows gap="1" grow>
-        <Image src="/powergame4title.png" />
+        <Image src="/powergame5title.png" />
         <Divider color="green" />
         <Row
           backgroundColor="background"
@@ -645,7 +646,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
       // game 1 rules
       //image: "https://i.imgur.com/hxX85GY.png",
       // game 3 rules
-      image: "https://i.imgur.com/tejJcKF.png",
+      image: "https://i.imgur.com/xE1BxhA.png",
       //imageAspectRatio: "1.91:1",
       intents: [
         // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
@@ -664,7 +665,7 @@ app.frame("/gamerules", neynarMiddleware, async (c) => {
     return c.res({
       action: "/gamerules",
       //image: "https://i.imgur.com/UMwnEuG.png",
-      image: "https://i.imgur.com/tejJcKF.png",
+      image: "https://i.imgur.com/xE1BxhA.png",
       //imageAspectRatio: "1.91:1",
       intents: [
         // <Button.Link href="https://warpcast.com/~/channel/powerfeed">
@@ -728,7 +729,8 @@ app.frame("/rules", neynarMiddleware, async (c) => {
   return c.res({
     action: "/soon",
     // https://i.imgur.com/tejJcKF.png
-    image: "https://i.imgur.com/tejJcKF.png",
+    // https://i.imgur.com/xE1BxhA.png
+    image: "https://i.imgur.com/xE1BxhA.png",
     //imageAspectRatio: "1.91:1",
     intents: [
       <Button value="backbutton" action={`/gamerules`}>
@@ -1156,7 +1158,7 @@ app.frame("/stats/:id", neynarMiddleware, async (c) => {
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
 const isProduction = isEdgeFunction || import.meta.env?.MODE !== "development";
-devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
+// devtools(app, isProduction ? { assetsPath: "/.frog" } : { serveStatic });
 
 export const GET = handle(app);
 export const POST = handle(app);
